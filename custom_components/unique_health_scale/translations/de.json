@@ -12,17 +12,20 @@
         "description": "{name} einrichten?"
       },
       "profile": {
-        "title": "Profil",
-        "description": "Körperfett, Muskelmasse und die übrigen Körperwerte werden aus den gemessenen Impedanzen zusammen mit Geschlecht, Größe und Alter geschätzt. Ohne Profil gibt es nur Gewicht, Herzfrequenz und Impedanzen.",
+        "title": "Erste Person",
+        "description": "Körperfett, Muskelmasse und die übrigen Körperwerte werden aus den gemessenen Impedanzen zusammen mit Geschlecht, Größe und Alter geschätzt. Weitere Personen lassen sich später über „Konfigurieren“ hinzufügen.",
         "data": {
+          "name": "Name",
           "sex": "Geschlecht",
           "height": "Größe",
           "birthday": "Geburtsdatum",
-          "age": "Alter"
+          "age": "Alter",
+          "reference_weight": "Ungefähres Gewicht"
         },
         "data_description": {
           "birthday": "Empfohlen: Das Alter stimmt dann immer.",
-          "age": "Wird nur verwendet, wenn kein Geburtsdatum angegeben ist, und muss jedes Jahr von Hand angepasst werden."
+          "age": "Wird nur verwendet, wenn kein Geburtsdatum angegeben ist, und muss jedes Jahr von Hand angepasst werden.",
+          "reference_weight": "Optional: hilft, die erste Wiegung automatisch der richtigen Person zuzuordnen. Danach zählt das zuletzt gemessene Gewicht."
         }
       }
     },
@@ -31,11 +34,19 @@
       "no_devices_found": "Kein Bluetooth-Gerät gefunden. Stell dich auf die Waage und versuche es erneut."
     },
     "error": {
-      "age_required": "Bitte Geburtsdatum oder Alter angeben."
+      "age_required": "Bitte Geburtsdatum oder Alter angeben.",
+      "name_required": "Bitte einen Namen angeben.",
+      "name_exists": "Diesen Namen gibt es schon."
     }
   },
   "entity": {
     "sensor": {
+      "last_weight": {
+        "name": "Letzte Wiegung"
+      },
+      "last_measurement": {
+        "name": "Letzte Messung"
+      },
       "weight": {
         "name": "Gewicht"
       },
@@ -218,27 +229,86 @@
       "muscle_left_leg": {
         "name": "Muskelmasse linkes Bein"
       }
+    },
+    "select": {
+      "assign": {
+        "name": "Letzte Wiegung zuordnen"
+      }
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "Profil",
-        "description": "Körperfett, Muskelmasse und die übrigen Körperwerte werden aus den gemessenen Impedanzen zusammen mit Geschlecht, Größe und Alter geschätzt. Ohne Profil gibt es nur Gewicht, Herzfrequenz und Impedanzen.",
+        "title": "Personen und Einstellungen",
+        "description": "Jede Person bekommt ein eigenes Gerät mit eigenen Sensoren. Eine Wiegung wird automatisch der Person zugeordnet, deren letztes Gewicht am nächsten liegt.",
+        "menu_options": {
+          "add_person": "Person hinzufügen",
+          "edit_person": "Person bearbeiten",
+          "remove_person": "Person entfernen",
+          "settings": "Zuordnung und Rückfrage"
+        }
+      },
+      "add_person": {
+        "title": "Person hinzufügen",
         "data": {
+          "name": "Name",
           "sex": "Geschlecht",
           "height": "Größe",
           "birthday": "Geburtsdatum",
-          "age": "Alter"
+          "age": "Alter",
+          "reference_weight": "Ungefähres Gewicht"
         },
         "data_description": {
           "birthday": "Empfohlen: Das Alter stimmt dann immer.",
-          "age": "Wird nur verwendet, wenn kein Geburtsdatum angegeben ist, und muss jedes Jahr von Hand angepasst werden."
+          "age": "Wird nur verwendet, wenn kein Geburtsdatum angegeben ist, und muss jedes Jahr von Hand angepasst werden.",
+          "reference_weight": "Optional: hilft, die erste Wiegung automatisch der richtigen Person zuzuordnen. Danach zählt das zuletzt gemessene Gewicht."
+        }
+      },
+      "edit_person": {
+        "title": "Person bearbeiten",
+        "data": {
+          "id": "Person"
+        }
+      },
+      "person": {
+        "title": "{name} bearbeiten",
+        "data": {
+          "name": "Name",
+          "sex": "Geschlecht",
+          "height": "Größe",
+          "birthday": "Geburtsdatum",
+          "age": "Alter",
+          "reference_weight": "Ungefähres Gewicht"
+        },
+        "data_description": {
+          "birthday": "Empfohlen: Das Alter stimmt dann immer.",
+          "age": "Wird nur verwendet, wenn kein Geburtsdatum angegeben ist, und muss jedes Jahr von Hand angepasst werden.",
+          "reference_weight": "Optional: hilft, die erste Wiegung automatisch der richtigen Person zuzuordnen. Danach zählt das zuletzt gemessene Gewicht."
+        }
+      },
+      "remove_person": {
+        "title": "Person entfernen",
+        "description": "Die Person wird mit ihrem Gerät und allen ihren Sensoren entfernt. Der bisherige Verlauf dieser Sensoren ist danach nicht mehr erreichbar.",
+        "data": {
+          "id": "Person"
+        }
+      },
+      "settings": {
+        "title": "Zuordnung und Rückfrage",
+        "description": "Eine Wiegung wird automatisch zugeordnet, wenn das Gewicht höchstens um die Toleranz vom letzten Gewicht einer Person abweicht und keine zweite Person ähnlich nah liegt. Sonst fragt Home Assistant nach.",
+        "data": {
+          "tolerance": "Toleranz",
+          "notify": "Rückfrage aufs Handy"
+        },
+        "data_description": {
+          "notify": "Geräte der Home-Assistant-App, die bei einer unklaren Wiegung eine Mitteilung mit den passenden Personen als Knöpfe bekommen. Ohne Auswahl erscheint die Rückfrage nur als Mitteilung in Home Assistant."
         }
       }
     },
     "error": {
-      "age_required": "Bitte Geburtsdatum oder Alter angeben."
+      "age_required": "Bitte Geburtsdatum oder Alter angeben.",
+      "name_required": "Bitte einen Namen angeben.",
+      "name_exists": "Diesen Namen gibt es schon."
     }
   },
   "selector": {

@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections import deque
 from collections.abc import Callable
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from functools import partial
 import logging
@@ -17,22 +18,115 @@ from bleak_retry_connector import BleakClientWithServiceCache, establish_connect
 
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.components import persistent_notification
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 
 from homeassistant.util import dt as dt_util
 
 from .bodycomp import SEGMENTS, BodyComposition, BodyCompositionError, compute
+from .assign import match_person
 from .const import (
+    CONF_NOTIFY,
+    CONF_TOLERANCE,
     CONNECT_COOLDOWN,
+    DEFAULT_TOLERANCE_KG,
+    DOMAIN,
+    EVENT_MOBILE_ACTION,
     LEFU_SERVICE_UUID,
     NOTIFY_CHARS,
     RAW_HISTORY_SIZE,
     SESSION_TIMEOUT,
 )
-from .parser import ACTIVE_STATES, LOCKED_STATES, Measurement, find_cf_frame
-from .profile import Profile
+from .parser import ACTIVE_STATES, LOCKED_STATES, Measurement, Status, find_cf_frame
+from .profile import Person, persons_from_options
 
 _LOGGER = logging.getLogger(__name__)
+
+NO_PERSONS = "keine Person hinterlegt"
+
+TEXTS = {
+    "de": {
+        "title": "Waage: Wer hat sich gewogen?",
+        "message": (
+            "Die Wiegung mit {weight} kg auf „{scale}“ konnte keiner Person eindeutig"
+            " zugeordnet werden. Bitte beim Gerät „{scale}“ unter „Letzte Wiegung"
+            " zuordnen“ die Person auswählen. In Frage kommen: {candidates}."
+        ),
+        "mobile": "{weight} kg auf „{scale}“: Wer war das?",
+    },
+    "en": {
+        "title": "Scale: who was weighed?",
+        "message": (
+            "The weighing of {weight} kg on “{scale}” could not be assigned to a"
+            " person. Please pick the person under “Assign last weighing” on the"
+            " device “{scale}”. Candidates: {candidates}."
+        ),
+        "mobile": "{weight} kg on “{scale}”: who was that?",
+    },
+}
+
+
+@dataclass
+class PersonSnapshot:
+    """Stand einer Person vor einer Wiegung, um eine Fehlzuordnung zurueckzunehmen."""
+
+    weight_kg: float | None
+    heart_rate: int | None
+    measured_at: datetime | None
+    body: BodyComposition | None
+    body_state: str
+
+
+@dataclass
+class PersonData:
+    """Letzte Werte einer Person; versorgt deren Sensoren."""
+
+    person: Person
+    weight_kg: float | None = None
+    heart_rate: int | None = None
+    measured_at: datetime | None = None
+    body: BodyComposition | None = None
+    body_state: str = "wartet auf Messung"
+    body_serial: int = 0
+    # Zaehlt die zugeordneten Wiegungen bzw. die zurueckgenommenen Zuordnungen
+    weighing_serial: int = 0
+    revert_serial: int = 0
+    body_input: tuple[Any, ...] | None = None
+
+    @property
+    def reference_weight_kg(self) -> float | None:
+        """Vergleichsgewicht fuer die Zuordnung: letztes Gewicht, sonst die Angabe im Profil."""
+        return self.weight_kg or self.person.reference_weight_kg
+
+    def snapshot(self) -> PersonSnapshot:
+        return PersonSnapshot(
+            self.weight_kg, self.heart_rate, self.measured_at, self.body, self.body_state
+        )
+
+    def restore(self, snapshot: PersonSnapshot) -> None:
+        self.weight_kg = snapshot.weight_kg
+        self.heart_rate = snapshot.heart_rate
+        self.measured_at = snapshot.measured_at
+        self.body = snapshot.body
+        self.body_state = snapshot.body_state
+        self.body_input = None
+        self.revert_serial += 1
+
+
+@dataclass
+class Weighing:
+    """Eine Wiegung: Messwerte und die Person, der sie zugeordnet ist."""
+
+    id: int
+    time: datetime
+    weight_kg: float
+    heart_rate: int | None = None
+    ohm: dict[str, float] | None = None
+    person_id: str | None = None
+    candidates: list[str] = field(default_factory=list)
+    snapshot: PersonSnapshot | None = None
 
 
 class ScaleDevice:
@@ -53,11 +147,39 @@ class ScaleDevice:
         self._session_task: asyncio.Task[None] | None = None
         self._last_attempt = 0.0
         self._last_adv: str | None = None
-        self.profile = Profile.from_options(entry.options)
-        self.body: BodyComposition | None = None
-        self.body_state = "kein Profil hinterlegt" if self.profile is None else "wartet auf Messung"
-        self.body_serial = 0
-        self._body_input: tuple[Any, ...] | None = None
+        self.persons: dict[str, PersonData] = {
+            person.id: PersonData(person) for person in persons_from_options(entry.options)
+        }
+        self.tolerance_kg = float(entry.options.get(CONF_TOLERANCE, DEFAULT_TOLERANCE_KG))
+        self.notify_services: list[str] = list(entry.options.get(CONF_NOTIFY, []))
+        # Die letzte Wiegung uebersteht das Neuladen (z. B. wenn nach einer
+        # Rueckfrage erst die passende Person angelegt wird), nicht den Neustart.
+        self._stash: dict[str, Weighing] = hass.data.setdefault(DOMAIN, {})
+        self.weighing: Weighing | None = self._stash.get(entry.entry_id)
+        if self.weighing is not None and self.weighing.person_id not in self.persons:
+            self.weighing.person_id = None
+            self.weighing.snapshot = None
+            _, self.weighing.candidates = match_person(
+                self.weighing.weight_kg,
+                {key: data.reference_weight_kg for key, data in self.persons.items()},
+                self.tolerance_kg,
+            )
+        self._measuring_seen = False
+        self._tracked_weight: float | None = None
+        self._stale_ohm: dict[str, float] | None = None
+        # Eine offene Rueckfrage aus der Zeit vor dem Neuladen gilt weiter
+        self._asked = self.weighing is not None and self.weighing.person_id is None
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Geraeteeintrag der Waage."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.address)},
+            connections={(CONNECTION_BLUETOOTH, self.address)},
+            name=self.name,
+            manufacturer="Lefu (PAVABA)",
+            model="8-Elektroden-Koerperfettwaage",
+        )
 
     # ------------------------------------------------------------------ Sensoren
 
@@ -69,36 +191,205 @@ class ScaleDevice:
 
     @callback
     def _async_notify(self) -> None:
-        self._async_update_body()
+        self._async_track_weighing()
         for listener in list(self._listeners):
             listener()
 
+    # ---------------------------------------------------------------- Zuordnung
+
+    @property
+    def assignment_state(self) -> str:
+        """Zuordnung der letzten Wiegung als Text (fuer die Diagnose)."""
+        if not self.persons:
+            return NO_PERSONS
+        if self.weighing is None:
+            return "wartet auf Messung"
+        if self.weighing.person_id is None:
+            return "nicht zugeordnet"
+        return f"zugeordnet: {self.persons[self.weighing.person_id].person.name}"
+
     @callback
-    def _async_update_body(self) -> None:
-        """Koerperwerte berechnen, sobald Gewicht und alle Impedanzen da sind."""
-        weight = self.measurement.weight_kg
-        ohm = self.measurement.impedances_ohm
-        if self.profile is None or not weight or ohm is None:
+    def _async_track_weighing(self) -> None:
+        """Neue Wiegung erkennen, zuordnen und eintreffende Werte nachtragen."""
+        measurement = self.measurement
+        if measurement.status == Status.MEASURING:
+            self._measuring_seen = True
+        weight = measurement.weight_kg
+        if not weight:
             return
-        measured = (weight, *ohm.values())
-        if measured == self._body_input:
+        relocked = self._measuring_seen and measurement.status in LOCKED_STATES
+        if relocked or weight != self._tracked_weight:
+            self._measuring_seen = False
+            self._tracked_weight = weight
+            # Impedanzen, die jetzt noch anliegen, gehoeren zur vorigen Wiegung
+            self._stale_ohm = measurement.impedances_ohm
+            now = dt_util.utcnow()
+            self.weighing = Weighing(int(now.timestamp() * 1000), now, weight)
+            self._stash[self.entry.entry_id] = self.weighing
+            self._async_auto_assign(self.weighing)
+        weighing = self.weighing
+        if weighing is None or weighing.weight_kg != self._tracked_weight:
             return
-        self._body_input = measured
+        if measurement.heart_rate:
+            weighing.heart_rate = measurement.heart_rate
+        ohm = measurement.impedances_ohm
+        if ohm is not None and ohm != self._stale_ohm:
+            weighing.ohm = ohm
+        if weighing.person_id is not None:
+            self._apply(weighing)
+
+    @callback
+    def _async_auto_assign(self, weighing: Weighing) -> None:
+        self._async_dismiss_question()
+        if not self.persons:
+            return
+        person_id, weighing.candidates = match_person(
+            weighing.weight_kg,
+            {key: data.reference_weight_kg for key, data in self.persons.items()},
+            self.tolerance_kg,
+        )
+        if person_id is not None:
+            self._assign(weighing, person_id)
+            return
+        _LOGGER.info(
+            "Wiegung mit %.2f kg nicht eindeutig zuzuordnen, Rueckfrage", weighing.weight_kg
+        )
+        self._async_ask(weighing)
+
+    def _assign(self, weighing: Weighing, person_id: str | None) -> None:
+        """Wiegung einer Person geben; eine vorige Zuordnung wird zurueckgenommen."""
+        if weighing.person_id == person_id:
+            return
+        previous = self.persons.get(weighing.person_id or "")
+        if previous is not None and weighing.snapshot is not None:
+            previous.restore(weighing.snapshot)
+        weighing.snapshot = None
+        weighing.person_id = person_id
+        if person_id is not None:
+            data = self.persons[person_id]
+            weighing.snapshot = data.snapshot()
+            data.weighing_serial += 1
+            self._apply(weighing)
+
+    def _apply(self, weighing: Weighing) -> None:
+        """Werte der Wiegung bei der Person eintragen und Koerperwerte berechnen."""
+        data = self.persons[weighing.person_id or ""]
+        data.weight_kg = weighing.weight_kg
+        data.measured_at = weighing.time
+        if weighing.heart_rate:
+            data.heart_rate = weighing.heart_rate
+        if weighing.ohm is None:
+            return
+        measured = (weighing.weight_kg, *weighing.ohm.values())
+        if measured == data.body_input:
+            return
+        data.body_input = measured
+        profile = data.person.profile
         try:
-            self.body = compute(
-                self.profile.sex,
-                self.profile.age_on(dt_util.now().date()),
-                self.profile.height_cm,
-                weight,
-                {segment: ohm[f"z20_{segment}"] for segment in SEGMENTS},
-                {segment: ohm[f"z100_{segment}"] for segment in SEGMENTS},
+            data.body = compute(
+                profile.sex,
+                profile.age_on(dt_util.now().date()),
+                profile.height_cm,
+                weighing.weight_kg,
+                {segment: weighing.ohm[f"z20_{segment}"] for segment in SEGMENTS},
+                {segment: weighing.ohm[f"z100_{segment}"] for segment in SEGMENTS},
             )
         except BodyCompositionError as err:
-            self.body_state = f"Messung ausserhalb des gueltigen Bereichs: {err.reason}"
-            _LOGGER.warning("Koerperwerte nicht berechenbar (%s)", err.reason)
+            data.body_state = f"Messung ausserhalb des gueltigen Bereichs: {err.reason}"
+            _LOGGER.warning(
+                "Koerperwerte fuer %s nicht berechenbar (%s)", data.person.name, err.reason
+            )
             return
-        self.body_state = "berechnet"
-        self.body_serial += 1
+        data.body_state = "berechnet"
+        data.body_serial += 1
+
+    @callback
+    def async_assign(self, person_id: str | None) -> None:
+        """Letzte Wiegung von Hand zuordnen (None: keiner Person)."""
+        if self.weighing is None:
+            raise HomeAssistantError("Es liegt keine Wiegung vor, die zugeordnet werden kann")
+        if person_id is not None and person_id not in self.persons:
+            raise HomeAssistantError(f"Unbekannte Person: {person_id}")
+        self._assign(self.weighing, person_id)
+        self._async_dismiss_question()
+        for listener in list(self._listeners):
+            listener()
+
+    # ---------------------------------------------------------------- Rueckfrage
+
+    @property
+    def _notification_id(self) -> str:
+        return f"{DOMAIN}_{self.entry.entry_id}"
+
+    def _action(self, weighing: Weighing, person_id: str) -> str:
+        return f"UHS_{self.entry.entry_id}_{weighing.id}_{person_id}"
+
+    @callback
+    def _async_ask(self, weighing: Weighing) -> None:
+        """Nachfragen, wer sich gewogen hat: Mitteilung in HA und aufs Handy."""
+        texts = TEXTS["de" if self.hass.config.language.startswith("de") else "en"]
+        names = [self.persons[person_id].person.name for person_id in weighing.candidates]
+        placeholders = {
+            "weight": f"{weighing.weight_kg:.2f}",
+            "scale": self.name,
+            "candidates": ", ".join(names),
+        }
+        self._asked = True
+        persistent_notification.async_create(
+            self.hass,
+            texts["message"].format(**placeholders),
+            title=texts["title"],
+            notification_id=self._notification_id,
+        )
+        # Auf dem Handy passen nur wenige Knoepfe: die drei naechstliegenden Personen
+        actions = [
+            {"action": self._action(weighing, person_id), "title": name}
+            for person_id, name in list(zip(weighing.candidates, names))[:3]
+        ]
+        self._async_send_mobile(
+            {
+                "title": texts["title"],
+                "message": texts["mobile"].format(**placeholders),
+                "data": {"tag": self._notification_id, "actions": actions},
+            }
+        )
+
+    @callback
+    def _async_dismiss_question(self) -> None:
+        if not self._asked:
+            return
+        self._asked = False
+        persistent_notification.async_dismiss(self.hass, self._notification_id)
+        self._async_send_mobile(
+            {"message": "clear_notification", "data": {"tag": self._notification_id}}
+        )
+
+    @callback
+    def _async_send_mobile(self, data: dict[str, Any]) -> None:
+        for service in self.notify_services:
+            self.entry.async_create_background_task(
+                self.hass, self._async_call_notify(service, data), f"{DOMAIN} notify"
+            )
+
+    async def _async_call_notify(self, service: str, data: dict[str, Any]) -> None:
+        try:
+            await self.hass.services.async_call(
+                "notify", service.removeprefix("notify."), data, blocking=True
+            )
+        except Exception as err:  # noqa: BLE001 - eine Mitteilung darf nie die Messung stoeren
+            _LOGGER.warning("Mitteilung ueber notify.%s fehlgeschlagen: %s", service, err)
+
+    @callback
+    def _async_on_mobile_action(self, event: Event) -> None:
+        """Antwort auf die Rueckfrage vom Handy."""
+        weighing = self.weighing
+        if weighing is None:
+            return
+        action = str(event.data.get("action", ""))
+        for person_id in self.persons:
+            if action == self._action(weighing, person_id):
+                self.async_assign(person_id)
+                return
 
     @callback
     def _record(self, source: str, data: str) -> None:
@@ -118,13 +409,23 @@ class ScaleDevice:
 
     @callback
     def async_start(self) -> CALLBACK_TYPE:
-        """Advertising der Waage abonnieren."""
-        return bluetooth.async_register_callback(
-            self.hass,
-            self._async_on_advertisement,
-            {"address": self.address, "connectable": False},
-            bluetooth.BluetoothScanningMode.ACTIVE,
-        )
+        """Advertising der Waage und Antworten auf Rueckfragen abonnieren."""
+        unsubscribe = [
+            bluetooth.async_register_callback(
+                self.hass,
+                self._async_on_advertisement,
+                {"address": self.address, "connectable": False},
+                bluetooth.BluetoothScanningMode.ACTIVE,
+            ),
+            self.hass.bus.async_listen(EVENT_MOBILE_ACTION, self._async_on_mobile_action),
+        ]
+
+        @callback
+        def _stop() -> None:
+            for remove in unsubscribe:
+                remove()
+
+        return _stop
 
     @callback
     def _async_on_advertisement(

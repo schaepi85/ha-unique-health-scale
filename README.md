@@ -2,8 +2,8 @@
 
 Lokale Home-Assistant-Integration für 8-Elektroden-Körperfettwaagen, die mit der App **Unique Health** (Shenzhen Lefu Scale Co.) arbeiten, z. B. die **PAVABA 8-Elektroden-Waage mit Griff** (Bluetooth-Name `smart scale P1`). Ziel: alle Messwerte direkt per Bluetooth in HA, ohne Cloud und ohne App-Zwang.
 
-> **Status: v0.4 – Gewicht, Herzfrequenz, Segment-Impedanzen und alle Körperwerte (Körperfett, Muskelmasse, Wasser, Segmentwerte …) funktionieren.**
-> Das Gewicht wird aus den Funkdaten der Waage gelesen. Für die Körperanalyse verbindet sich die Integration während der Messung mit der Waage und liest die zehn Segment-Impedanzen und die Herzfrequenz mit (an echter Hardware bestätigt). Aus Impedanzen, Gewicht und dem hinterlegten Profil berechnet die Integration die Körperwerte lokal. Details: [docs/protocol.md](docs/protocol.md) und [docs/body-composition.md](docs/body-composition.md).
+> **Status: v0.5 – Gewicht, Herzfrequenz, Segment-Impedanzen und alle Körperwerte (Körperfett, Muskelmasse, Wasser, Segmentwerte …) funktionieren, für beliebig viele Personen.**
+> Das Gewicht wird aus den Funkdaten der Waage gelesen. Für die Körperanalyse verbindet sich die Integration während der Messung mit der Waage und liest die zehn Segment-Impedanzen und die Herzfrequenz mit (an echter Hardware bestätigt). Aus Impedanzen, Gewicht und dem Profil der Person berechnet die Integration die Körperwerte lokal. Details: [docs/protocol.md](docs/protocol.md) und [docs/body-composition.md](docs/body-composition.md).
 
 ## Voraussetzungen
 
@@ -15,14 +15,36 @@ Lokale Home-Assistant-Integration für 8-Elektroden-Körperfettwaagen, die mit d
 1. HACS → ⋮ → *Benutzerdefinierte Repositories* → `https://github.com/schaepi85/ha-unique-health-scale` als *Integration* hinzufügen
 2. „Unique Health Scale (Lefu)“ installieren, HA neu starten
 3. Auf die Waage stellen – HA zeigt sie unter *Einstellungen → Geräte & Dienste* als entdeckt an. Falls nicht: *Integration hinzufügen → Unique Health Scale* und die Waage aus der Liste wählen.
-4. Profil angeben: Geschlecht, Größe und Geburtsdatum (oder Alter). Ohne Profil gibt es nur Gewicht, Herzfrequenz und Impedanzen. Später ändern: *Geräte & Dienste → Unique Health Scale → Konfigurieren*.
+4. Erste Person angeben: Name, Geschlecht, Größe und Geburtsdatum (oder Alter). Weitere Personen und Änderungen: *Geräte & Dienste → Unique Health Scale → Konfigurieren*.
+
+## Mehrere Personen
+
+Unter *Konfigurieren* lassen sich beliebig viele Personen anlegen, bearbeiten und entfernen. Jede Person bekommt ein eigenes Gerät mit eigenen Sensoren (Gewicht, Herzfrequenz, alle Körperwerte, Zeitpunkt der letzten Messung); die Körperwerte werden mit ihrem Profil berechnet.
+
+**Automatische Zuordnung:** Eine Wiegung gehört der Person, deren letztes Gewicht am nächsten liegt. Sie wird ohne Rückfrage zugeordnet, wenn
+
+- das Gewicht höchstens um die Toleranz (Standard 3 kg, einstellbar) vom letzten Gewicht der Person abweicht und
+- keine zweite Person ebenfalls in der Toleranz liegt – es sei denn, die nächste Person liegt mindestens 1 kg näher.
+
+Solange eine Person noch nie gewogen wurde, zählt das optionale „ungefähre Gewicht“ aus ihrem Profil. Ist nur eine Person angelegt und noch kein Gewicht bekannt, bekommt sie ihre erste Wiegung direkt.
+
+**Rückfrage:** Passt niemand oder passen mehrere (Beispiel: zwei Personen mit 74 und 75 kg, oder Besuch), bleibt die Wiegung zunächst ohne Person. Home Assistant zeigt eine Mitteilung, und an der Waage steht die Auswahl **Letzte Wiegung zuordnen**: Person wählen, und Gewicht, Herzfrequenz und Körperwerte werden bei ihr eingetragen. Mit `–` bleibt die Wiegung ohne Person. Über dieselbe Auswahl lässt sich auch eine falsche Zuordnung korrigieren; die Sensoren der fälschlich gewählten Person springen auf ihren vorigen Stand zurück (der eine falsche Punkt im Verlauf bleibt allerdings stehen). Die letzte Wiegung bleibt zuordenbar, bis die nächste kommt oder Home Assistant neu startet.
+
+Optional geht die Rückfrage aufs Handy: Unter *Konfigurieren → Zuordnung und Rückfrage* die Geräte der Home-Assistant-App wählen. Die Mitteilung zeigt die bis zu drei nächstliegenden Personen als Knöpfe.
+
+Für Automationen: `select.select_option` auf die Auswahl ordnet zu; ihr Zustand nennt die Person der letzten Wiegung (`–` = offen), die Attribute `weight_kg`, `time` und `candidates` die Details.
+
+**Aktualisierung von v0.4:** Aus dem bisherigen Profil wird automatisch „Person 1“ (unter *Konfigurieren → Person bearbeiten* umbenennbar). Alle Sensoren behalten ihre Entity-IDs und ihren Verlauf; Dashboards und Automationen laufen unverändert weiter. Neu an der Waage ist „Letzte Wiegung“ (Gewicht unabhängig von der Person).
 
 ## Entitäten
+
+Je Person (eigenes Gerät):
 
 | Entität | Beschreibung |
 | --- | --- |
 | Gewicht | Gewicht in kg, sobald es auf der Waage feststeht |
 | Herzfrequenz | Herzfrequenz am Ende der Messung |
+| Letzte Messung | Zeitpunkt der letzten Wiegung der Person |
 | Körperfett, Fettmasse, fettfreie Masse | Anteil in % bzw. Masse in kg |
 | Muskelmasse, Skelettmuskelmasse (+ Anteile) | in kg bzw. % |
 | Körperwasser (Masse/Anteil), intra-/extrazelluläres Wasser | in kg bzw. % |
@@ -32,9 +54,16 @@ Lokale Home-Assistant-Integration für 8-Elektroden-Körperfettwaagen, die mit d
 | Körperpunktzahl, Körperalter, Körpertyp, Adipositasgrad | |
 | Idealgewicht, Zielgewicht, Gewichts-/Fett-/Muskelkontrolle | Empfehlung: wie viel ab- bzw. aufbauen |
 | Fettmasse / Muskelmasse je Segment | je fünf Sensoren (Arme, Rumpf, Beine) in kg |
+
+An der Waage:
+
+| Entität | Beschreibung |
+| --- | --- |
+| Letzte Wiegung | Gewicht der letzten Wiegung, egal von wem |
+| Letzte Wiegung zuordnen | Auswahl: wem die letzte Wiegung gehört (siehe oben) |
 | Impedanz … 20/100 kHz | Diagnose: zehn Sensoren mit den Segment-Impedanzen in Ohm (Arme, Beine, Rumpf bei 20 und 100 kHz) |
 | Impedanzen | Diagnose: Übersicht der letzten Körperanalyse, alle Werte als Attribute |
-| Rohdaten | Diagnose: letzte Funk- und Verbindungsdaten, Sitzungsstatus und Verlauf – für die Protokollanalyse |
+| Rohdaten | Diagnose: letzte Funk- und Verbindungsdaten, Sitzungsstatus, Zuordnung und Verlauf – für die Protokollanalyse |
 
 Viele Körperwerte tragen als Attribute den Referenzbereich für Größe und Geschlecht (`normal_min`, `normal_max`) und die Einstufung (`rating`: `low` / `normal` / `high`); die Segmentwerte den Anteil am Normwert (`percent_of_reference`). Die Werte bleiben über Neustarts erhalten und werden mit jeder vollständigen Messung aktualisiert.
 
@@ -67,7 +96,7 @@ Benötigte Frontend-Karten (HACS → Frontend):
 - [ApexCharts Card](https://github.com/RomRider/apexcharts-card)
 - optional [card-mod](https://github.com/thomasloven/lovelace-card-mod) für den Hintergrund (ohne card-mod den `card_mod`-Block löschen)
 
-Einfügen über *Dashboard bearbeiten → Karte hinzufügen → Manuell*. Die Entity-IDs gehen von einem Gerät namens „Smart Scale P1“ und deutscher Oberfläche aus (`sensor.smart_scale_p1_gewicht` usw.); bei anderen Namen `sensor.smart_scale_p1_` per Suchen & Ersetzen anpassen. Die Verläufe nutzen die Langzeitstatistik von Home Assistant (Tagesmittel) und füllen sich nach den ersten Messtagen.
+Einfügen über *Dashboard bearbeiten → Karte hinzufügen → Manuell*. Die Karte zeigt die Werte einer Person. Ihre Entity-IDs gehen von deutscher Oberfläche und dem Präfix `sensor.smart_scale_p1_` aus (`sensor.smart_scale_p1_gewicht` usw.), wie ihn eine von v0.4 aktualisierte Installation behält. Bei einer neuen Installation tragen die Sensoren den Namen der Person (z. B. `sensor.alex_gewicht`): dann `sensor.smart_scale_p1_` per Suchen & Ersetzen durch `sensor.<name>_` ersetzen. Für mehrere Personen die Karte je Person einmal einfügen. Die Verläufe nutzen die Langzeitstatistik von Home Assistant (Tagesmittel) und füllen sich nach den ersten Messtagen.
 
 ## Entwicklung
 
@@ -85,7 +114,7 @@ Die Tests simulieren die Waage (Advertising und FFF4-Notifications) gegen ein ec
 - [x] Impedanzen an echter Hardware mitlesen und in Ohm umrechnen
 - [x] Herzfrequenz mitlesen
 - [x] Körperwerte berechnen (Körperfett, Muskelmasse, Wasser, Segmentwerte …)
-- [ ] Mehrere Personen / Profile
+- [x] Mehrere Personen mit automatischer Zuordnung über das Gewicht
 
 ## Hinweis
 

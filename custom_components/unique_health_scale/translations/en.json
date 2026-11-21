@@ -12,17 +12,20 @@
         "description": "Set up {name}?"
       },
       "profile": {
-        "title": "Profile",
-        "description": "Body fat, muscle mass and the other body values are estimated from the measured impedances together with sex, height and age. Without a profile only weight, heart rate and impedances are available.",
+        "title": "First person",
+        "description": "Body fat, muscle mass and the other body values are estimated from the measured impedances together with sex, height and age. More people can be added later via “Configure”.",
         "data": {
+          "name": "Name",
           "sex": "Sex",
           "height": "Height",
           "birthday": "Date of birth",
-          "age": "Age"
+          "age": "Age",
+          "reference_weight": "Approximate weight"
         },
         "data_description": {
           "birthday": "Recommended: the age is then always up to date.",
-          "age": "Only used if no date of birth is given; it has to be adjusted manually every year."
+          "age": "Only used if no date of birth is given; it has to be adjusted manually every year.",
+          "reference_weight": "Optional: helps to assign the first weighing to the right person automatically. After that the last measured weight counts."
         }
       }
     },
@@ -31,11 +34,19 @@
       "no_devices_found": "No Bluetooth device found. Step on the scale and try again."
     },
     "error": {
-      "age_required": "Please enter a date of birth or an age."
+      "age_required": "Please enter a date of birth or an age.",
+      "name_required": "Please enter a name.",
+      "name_exists": "This name already exists."
     }
   },
   "entity": {
     "sensor": {
+      "last_weight": {
+        "name": "Last weighing"
+      },
+      "last_measurement": {
+        "name": "Last measurement"
+      },
       "weight": {
         "name": "Weight"
       },
@@ -218,27 +229,86 @@
       "muscle_left_leg": {
         "name": "Muscle mass left leg"
       }
+    },
+    "select": {
+      "assign": {
+        "name": "Assign last weighing"
+      }
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "Profile",
-        "description": "Body fat, muscle mass and the other body values are estimated from the measured impedances together with sex, height and age. Without a profile only weight, heart rate and impedances are available.",
+        "title": "People and settings",
+        "description": "Each person gets a device of their own with their own sensors. A weighing is assigned automatically to the person whose last weight is closest.",
+        "menu_options": {
+          "add_person": "Add person",
+          "edit_person": "Edit person",
+          "remove_person": "Remove person",
+          "settings": "Assignment and question"
+        }
+      },
+      "add_person": {
+        "title": "Add person",
         "data": {
+          "name": "Name",
           "sex": "Sex",
           "height": "Height",
           "birthday": "Date of birth",
-          "age": "Age"
+          "age": "Age",
+          "reference_weight": "Approximate weight"
         },
         "data_description": {
           "birthday": "Recommended: the age is then always up to date.",
-          "age": "Only used if no date of birth is given; it has to be adjusted manually every year."
+          "age": "Only used if no date of birth is given; it has to be adjusted manually every year.",
+          "reference_weight": "Optional: helps to assign the first weighing to the right person automatically. After that the last measured weight counts."
+        }
+      },
+      "edit_person": {
+        "title": "Edit person",
+        "data": {
+          "id": "Person"
+        }
+      },
+      "person": {
+        "title": "Edit {name}",
+        "data": {
+          "name": "Name",
+          "sex": "Sex",
+          "height": "Height",
+          "birthday": "Date of birth",
+          "age": "Age",
+          "reference_weight": "Approximate weight"
+        },
+        "data_description": {
+          "birthday": "Recommended: the age is then always up to date.",
+          "age": "Only used if no date of birth is given; it has to be adjusted manually every year.",
+          "reference_weight": "Optional: helps to assign the first weighing to the right person automatically. After that the last measured weight counts."
+        }
+      },
+      "remove_person": {
+        "title": "Remove person",
+        "description": "The person is removed together with their device and all their sensors. The history of those sensors is no longer accessible afterwards.",
+        "data": {
+          "id": "Person"
+        }
+      },
+      "settings": {
+        "title": "Assignment and question",
+        "description": "A weighing is assigned automatically if the weight differs from a person's last weight by no more than the tolerance and no second person is similarly close. Otherwise Home Assistant asks.",
+        "data": {
+          "tolerance": "Tolerance",
+          "notify": "Ask on the phone"
+        },
+        "data_description": {
+          "notify": "Devices of the Home Assistant app that get a notification with the matching people as buttons when a weighing is unclear. Without a selection the question only appears as a notification in Home Assistant."
         }
       }
     },
     "error": {
-      "age_required": "Please enter a date of birth or an age."
+      "age_required": "Please enter a date of birth or an age.",
+      "name_required": "Please enter a name.",
+      "name_exists": "This name already exists."
     }
   },
   "selector": {

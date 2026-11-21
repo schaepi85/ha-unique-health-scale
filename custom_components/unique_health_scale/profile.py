@@ -8,7 +8,16 @@ from datetime import date
 from typing import Any
 
 from .bodycomp import Sex
-from .const import CONF_AGE, CONF_BIRTHDAY, CONF_HEIGHT, CONF_SEX
+from .const import (
+    CONF_AGE,
+    CONF_BIRTHDAY,
+    CONF_HEIGHT,
+    CONF_ID,
+    CONF_NAME,
+    CONF_PERSONS,
+    CONF_REFERENCE_WEIGHT,
+    CONF_SEX,
+)
 
 
 @dataclass(frozen=True)
@@ -46,3 +55,38 @@ class Profile:
             return self.age
         had_birthday = (day.month, day.day) >= (self.birthday.month, self.birthday.day)
         return day.year - self.birthday.year - (0 if had_birthday else 1)
+
+
+@dataclass(frozen=True)
+class Person:
+    """Eine Person, die die Waage nutzt."""
+
+    id: str
+    name: str
+    profile: Profile
+    reference_weight_kg: float | None = None
+
+    @classmethod
+    def from_options(cls, options: Mapping[str, Any]) -> Person | None:
+        """Person aus ihrem Optionen-Eintrag lesen; None, wenn er unvollstaendig ist."""
+        profile = Profile.from_options(options)
+        if profile is None or not options.get(CONF_ID) or not options.get(CONF_NAME):
+            return None
+        reference = options.get(CONF_REFERENCE_WEIGHT)
+        return cls(
+            str(options[CONF_ID]),
+            str(options[CONF_NAME]),
+            profile,
+            float(reference) if reference else None,
+        )
+
+
+def persons_from_options(options: Mapping[str, Any]) -> list[Person]:
+    """Alle vollstaendig konfigurierten Personen eines Config-Eintrags."""
+    persons = (Person.from_options(item) for item in options.get(CONF_PERSONS, []))
+    return [person for person in persons if person is not None]
+
+
+def person_identifier(address: str, person_id: str) -> str:
+    """Kennung des Geraets bzw. Praefix der Entitaeten einer Person."""
+    return f"{address}_{person_id}"

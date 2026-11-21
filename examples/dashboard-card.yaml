@@ -7,9 +7,11 @@
 # Benötigt (HACS → Frontend): Mushroom, stack-in-card, apexcharts-card;
 # card-mod nur für den Hintergrund (sonst den card_mod-Block löschen).
 #
-# Die Entity-IDs gehen von einem Gerät namens "Smart Scale P1" und deutscher
-# Oberfläche aus. Heißen sie bei dir anders, "sensor.smart_scale_p1_" per
-# Suchen & Ersetzen anpassen.
+# Die Karte zeigt die Werte einer Person. Die Entity-IDs gehen von deutscher
+# Oberfläche und dem Präfix "sensor.smart_scale_p1_" aus (so bleibt er nach
+# der Aktualisierung von v0.4). Bei einer neuen Installation tragen die
+# Sensoren den Namen der Person: "sensor.smart_scale_p1_" per Suchen &
+# Ersetzen durch "sensor.<name>_" ersetzen. Je Person eine Karte.
 #
 # Einfügen: Dashboard bearbeiten → Karte hinzufügen → Manuell → Inhalt einfügen.
 
