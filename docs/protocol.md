@@ -33,11 +33,11 @@ aa bb cc dd ee ff | cf 00 00 4c 1d 00 00 00 00 08 96
 | --- | --- | --- |
 | 0 | `0xCF` | ✅ |
 | 1 | Herzfrequenz, gültig wenn Byte 2 = `0xC0` | 🔎 |
-| 2 | `0x80` = Herzfrequenz wird gemessen, `0xC0` = Herzfrequenz liegt vor | 🔎 |
+| 2 | `0x80` = Herzfrequenz wird gemessen (✅), `0xC0` = Herzfrequenz liegt vor (🔎) | |
 | 3–4 | Gewicht, Little Endian, Einheit 0,01 kg | ✅ |
 | 5–7 | bei dieser Familie ungenutzt (andere Familien: Impedanz) | ✅ immer 0 |
 | 8 | Anzeigeeinheit der Waage | 🔎 |
-| 9 | Status, siehe unten | ✅ 1 und 8 |
+| 9 | Status, siehe unten | ✅ 1, 3 und 8 |
 | 10 | Prüfsumme: XOR der Bytes 0–9 | ✅ |
 
 Status (Byte 9):
@@ -47,15 +47,17 @@ Status (Byte 9):
 | 0 | Messung abgeschlossen 🔎 |
 | 1 | Gewicht schwankt noch ✅ |
 | 2 | Überlast 🔎 |
+| 3 | Herzfrequenz wird gemessen (zusammen mit Byte 2 = `0x80`) ✅ |
 | 5, 8 | Gewicht steht fest, Körperanalyse beginnt (✅ 8) |
 | 6 | Körperanalyse läuft 🔎 |
 
-## Verbindung (GATT) 🔎
+## Verbindung (GATT)
 
-- Dienst `FFF0`; Notifications auf `FFF1`, `FFF2` und `FFF4`
-- **`FFF4`** liefert die Messdaten: Frames mit `cf`, `bf` oder `df` am Anfang
-- Schreiben über `FFF1`/`FFF2` (Zeit setzen, Einheit, WLAN, Körperfett zurückschreiben); Keep-alive ist der Befehl `1000`
-- Optional gibt es eine Authentifizierung (Befehle `C0`–`C3`, AES). Ob diese Waage sie verlangt, bestimmt das Flag `needAuth` der Gerätekonfiguration – offen.
+- Dienst `FFF0` mit **`FFF4` (Notify)** und **`FFF1` (Write)**; dazu Geräteinformation (`180A`) und Batterie (`2A19`). Ein `FFF2` hat diese Waage nicht. ✅
+- `FFF4` liefert die Messdaten **ohne Authentifizierung und ohne dass vorher etwas geschrieben wird**: erst der CF-Frame mit Status 8, etwa 0,6 s später vier DF-Frames, danach CF mit Status 3. ✅
+- Der Verbindungsaufbau über Home Assistant dauerte im Test rund 10 s; die Waage lieferte die Frames trotzdem vollständig. ✅
+- Schreiben über `FFF1` (Zeit setzen, Einheit, Körperfett zurückschreiben); Keep-alive ist der Befehl `1000`. 🔎
+- Die App kennt eine optionale Authentifizierung (Befehle `C0`–`C3`, AES); diese Waage braucht sie zum Mitlesen nicht.
 - Die App schreibt nach der Berechnung Werte auf die Waage zurück (`cmdWirteBodyFat`). Die Körperwerte entstehen also **in der App**, nicht auf der Waage.
 
 ## BF-Frame (23 Bytes): Impedanzen einer Frequenz 🔎
@@ -71,22 +73,24 @@ Status (Byte 9):
 | 18–21 | linkes Bein |
 | 22 | vermutlich Prüfsumme |
 
-## DF-Frame (17 Bytes): Impedanzen in Teilpaketen 🔎
+## DF-Frame (17 Bytes): Impedanzen in Teilpaketen ✅
 
 | Byte | Inhalt |
 | --- | --- |
 | 0 | `0xDF` |
-| 1 | `0xFF` = zurücksetzen |
+| 1 | `0xFF` = zurücksetzen (🔎); beobachtet: `0x02` |
 | 2 | Teil: 0 = Arme + Rumpf, 1 = Beine |
 | 3 | Frequenz: 0 = 20 kHz, 1 = 100 kHz |
 | 4–7, 8–11, 12–15 | Teil 0: rechter Arm, linker Arm, Rumpf · Teil 1: rechtes Bein, linkes Bein |
-| 16 | vermutlich Prüfsumme |
+| 16 | Prüfsumme: XOR der Bytes 0–15 ✅ |
+
+Diese Waage nutzt DF-Frames; BF-Frames wurden bisher nicht beobachtet.
 
 Die Impedanzen heißen im SDK `z20KhzLeftArmEnCode` usw. – sie sind **kodiert** und werden erst in der Rechenbibliothek entschlüsselt.
 
 ## Offene Punkte
 
-1. FFF4 an der echten Waage mitschneiden: Kommen `bf`/`df`-Frames ohne Authentifizierung und ohne dass die App etwas schreibt?
+1. Ende der Messung mitschneiden: Herzfrequenz (Byte 2 = `0xC0`) und Status 0
 2. Gewichtsformat mit der Anzeige der Waage abgleichen
 3. Rechenweg der App nachvollziehen: Entschlüsselung der Impedanzen und 8-Elektroden-Algorithmus (`PPCalculateKit`, Kennzahlen in `BodyParam_HT_8.json`)
 4. Benutzerprofile (Größe, Alter, Geschlecht) in der Integration

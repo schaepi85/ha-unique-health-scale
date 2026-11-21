@@ -50,10 +50,13 @@ def test_measurement_flow():
 
 def test_df():
     def df(part, freq, vals):
-        return bytes([0xDF, 0x00, part, freq]) + b"".join(v.to_bytes(4,"little") for v in vals) + b"\x00"
+        body = bytes([0xDF, 0x02, part, freq]) + b"".join(v.to_bytes(4,"little") for v in vals)
+        return body + bytes([p._xor(body)])
     m = p.Measurement()
     for part, freq, vals in ((0,0,(1,2,3)),(1,0,(4,5,0)),(0,1,(6,7,8)),(1,1,(9,10,0))):
         assert m.feed(df(part, freq, vals))
     assert m.impedances_complete and m.impedances["z100_left_leg"] == 10 and m.impedances["z20_right_leg"] == 4
-    assert m.feed(bytes([0xDF,0xFF]) + bytes(15)) and m.impedances == {}
+    reset = bytes([0xDF,0xFF]) + bytes(14)
+    assert m.feed(reset + bytes([p._xor(reset)])) and m.impedances == {}
+    assert not m.feed(df(0, 0, (1, 2, 3))[:-1] + b"\x00")  # falsche Pruefsumme
     assert not m.feed(b"\x10\x00")

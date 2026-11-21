@@ -171,6 +171,9 @@ class ScaleDevice:
             self._set_session_state(f"Verbindung fehlgeschlagen: {err}")
             return
 
+        # Ein fehlgeschlagener erster Verbindungsversuch meldet sich ebenfalls
+        # ueber den Disconnect-Callback; fuer die neue Verbindung zaehlt er nicht.
+        disconnected.clear()
         self.connected = True
         try:
             self.gatt_characteristics = [
@@ -196,7 +199,14 @@ class ScaleDevice:
             self._set_session_state(f"verbunden, lausche auf {','.join(subscribed)}")
             try:
                 async with asyncio.timeout(SESSION_TIMEOUT):
-                    await disconnected.wait()
+                    while not disconnected.is_set():
+                        if not client.is_connected:
+                            break
+                        try:
+                            async with asyncio.timeout(2):
+                                await disconnected.wait()
+                        except TimeoutError:
+                            continue
             except TimeoutError:
                 self._set_session_state("Sitzung nach Zeitlimit beendet")
             else:

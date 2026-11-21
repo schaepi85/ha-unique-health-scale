@@ -36,13 +36,20 @@ class Status(IntEnum):
     END = 0
     MEASURING = 1
     OVERLOAD = 2
+    HEART_RATE = 3
     LOCKED = 5
     ANALYZING = 6
     LOCKED_ALT = 8
 
 
 LOCKED_STATES = (Status.LOCKED, Status.LOCKED_ALT)
-ACTIVE_STATES = (Status.MEASURING, Status.LOCKED, Status.ANALYZING, Status.LOCKED_ALT)
+ACTIVE_STATES = (
+    Status.MEASURING,
+    Status.HEART_RATE,
+    Status.LOCKED,
+    Status.ANALYZING,
+    Status.LOCKED_ALT,
+)
 
 
 @dataclass(frozen=True)
@@ -107,6 +114,8 @@ def parse_impedance_frame(data: bytes) -> dict[str, int] | None:
             for index, segment in enumerate(SEGMENTS)
         }
     if len(data) == DF_LENGTH and data[0] == 0xDF:
+        if _xor(data[:16]) != data[16]:
+            return None
         if data[1] == 0xFF:
             return {}
         khz = FREQUENCIES.get(data[3])

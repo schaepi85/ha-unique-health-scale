@@ -74,6 +74,7 @@ class FakeClient:
         self.callbacks = {}
         self.disconnected_callback = None
         self.disconnect = AsyncMock()
+        self.is_connected = True
         u = "0000fff%d-0000-1000-8000-00805f9b34fb"
         self.services = FakeServices([FakeService([
             FakeChar(u % 1, ["write", "notify"]), FakeChar(u % 2, ["write-without-response", "notify"]),
@@ -118,6 +119,10 @@ async def test_full_session(hass, enable_bluetooth):
 
     async def fake_establish(cls, device, name, disconnected_callback=None, **kw):
         client.disconnected_callback = disconnected_callback
+        # Wie an der echten Waage beobachtet: Der erste Versuch scheitert und
+        # meldet einen Disconnect, bevor die Verbindung steht.
+        disconnected_callback(client)
+        await asyncio.sleep(0)
         return client
 
     with patch("custom_components.unique_health_scale.device.bluetooth.async_ble_device_from_address", return_value=DEVICE), \
@@ -138,6 +143,10 @@ async def test_full_session(hass, enable_bluetooth):
         notify(None, bytearray(bf(0, (101, 102, 103, 104, 105))))
         inject(hass, CF_MEASURING)
         notify(None, bytearray(bf(1, (201, 202, 203, 204, 205))))
+        notify(None, bytearray(cf(3, b2=0x80)))  # Herzfrequenz wird gemessen
+        await hass.async_block_till_done()
+        assert state(hass, "raw_data").attributes["session"] == "verbunden, lausche auf fff4,fff1,fff2"
+        assert state(hass, "impedances_encoded").state == "10"
         notify(None, bytearray(cf(0, hr=72, b2=0xC0)))
         notify(None, bytearray(b"\x12\x34"))
         await hass.async_block_till_done()
@@ -148,7 +157,7 @@ async def test_full_session(hass, enable_bluetooth):
         assert imp.state == "10" and imp.attributes["complete"] is True
         assert imp.attributes["z20_right_arm"] == 101 and imp.attributes["z100_left_leg"] == 205
         hist = state(hass, "raw_data").attributes["history"]
-        assert [h["src"] for h in hist].count("fff4") == 6
+        assert [h["src"] for h in hist].count("fff4") == 7
 
         client.disconnected_callback(client)
         for _ in range(20):
