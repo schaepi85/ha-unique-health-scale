@@ -1,0 +1,846 @@
+{
+ "male_35": {
+  "input": {
+   "sex": 1,
+   "age": 35,
+   "height_cm": 180,
+   "weight_kg": 75.0,
+   "z20_ohm": {
+    "right_arm": 310.0,
+    "left_arm": 305.0,
+    "trunk": 25.0,
+    "right_leg": 260.0,
+    "left_leg": 258.0
+   },
+   "z100_ohm": {
+    "right_arm": 270.0,
+    "left_arm": 269.0,
+    "trunk": 24.0,
+    "right_leg": 225.0,
+    "left_leg": 227.0
+   }
+  },
+  "expected": {
+   "weight_kg": 75.0,
+   "bmi": 23.1,
+   "body_fat_percent": 13.8,
+   "body_fat_kg": 10.4,
+   "fat_free_mass_kg": 64.6,
+   "muscle_kg": 60.2,
+   "muscle_percent": 80.3,
+   "skeletal_muscle_kg": 36.8,
+   "skeletal_muscle_percent": 49.0,
+   "water_kg": 47.4,
+   "water_percent": 63.2,
+   "intracellular_water_kg": 29.5,
+   "extracellular_water_kg": 17.9,
+   "protein_kg": 12.8,
+   "protein_percent": 17.0,
+   "mineral_kg": 4.4,
+   "bone_kg": 3.5,
+   "body_cell_mass_kg": 42.7,
+   "subcutaneous_fat_kg": 8.7,
+   "subcutaneous_fat_percent": 11.6,
+   "visceral_fat": 6,
+   "waist_hip_ratio": 0.81,
+   "skeletal_muscle_index": 8.5,
+   "basal_metabolic_rate": 1765,
+   "daily_calorie_intake": 2294,
+   "body_score": 84,
+   "body_age": 31,
+   "body_type": 8,
+   "obesity_percent": 105,
+   "ideal_weight_kg": 71.3,
+   "target_weight_kg": 76.0,
+   "weight_control_kg": 1.0,
+   "fat_control_kg": 1.0,
+   "muscle_control_kg": 0.0,
+   "segment_fat_kg": {
+    "right_arm": 0.7,
+    "left_arm": 0.7,
+    "trunk": 5.2,
+    "right_leg": 1.3,
+    "left_leg": 1.3
+   },
+   "segment_fat_percent": {
+    "right_arm": 100.0,
+    "left_arm": 100.0,
+    "trunk": 115.5,
+    "right_leg": 68.4,
+    "left_leg": 68.4
+   },
+   "segment_fat_level": {
+    "right_arm": 1,
+    "left_arm": 1,
+    "trunk": 1,
+    "right_leg": 0,
+    "left_leg": 0
+   },
+   "segment_muscle_kg": {
+    "right_arm": 3.4,
+    "left_arm": 3.3,
+    "trunk": 28.3,
+    "right_leg": 10.5,
+    "left_leg": 10.4
+   },
+   "segment_muscle_percent": {
+    "right_arm": 103.0,
+    "left_arm": 100.0,
+    "trunk": 107.6,
+    "right_leg": 115.3,
+    "left_leg": 114.2
+   },
+   "segment_muscle_level": {
+    "right_arm": 1,
+    "left_arm": 1,
+    "trunk": 1,
+    "right_leg": 2,
+    "left_leg": 2
+   },
+   "balance": {
+    "muscle_arms": 0,
+    "muscle_legs": 0,
+    "muscle_arms_vs_legs": 0,
+    "fat_arms": 0,
+    "fat_legs": 0
+   },
+   "ranges": {
+    "bmi": [
+     18.5,
+     23.0
+    ],
+    "weight_kg": [
+     60.6,
+     82.0
+    ],
+    "body_fat_percent": [
+     10.0,
+     20.0
+    ],
+    "body_fat_kg": [
+     8.6,
+     17.2
+    ],
+    "fat_free_mass_kg": [
+     52.0,
+     64.8
+    ],
+    "water_kg": [
+     40.0,
+     48.8
+    ],
+    "protein_kg": [
+     10.7,
+     13.0
+    ],
+    "mineral_kg": [
+     3.7,
+     4.5
+    ],
+    "muscle_kg": [
+     51.5,
+     70.7
+    ],
+    "bone_kg": [
+     3.1,
+     3.8
+    ],
+    "skeletal_muscle_kg": [
+     30.6,
+     37.4
+    ],
+    "intracellular_water_kg": [
+     24.8,
+     30.4
+    ],
+    "extracellular_water_kg": [
+     15.2,
+     18.6
+    ],
+    "body_cell_mass_kg": [
+     35.6,
+     43.5
+    ],
+    "subcutaneous_fat_percent": [
+     8.6,
+     16.7
+    ],
+    "subcutaneous_fat_kg": [
+     6.1,
+     11.9
+    ],
+    "visceral_fat": [
+     1,
+     9
+    ],
+    "waist_hip_ratio": [
+     0.8,
+     0.9
+    ],
+    "basal_metabolic_rate": [
+     1609.0,
+     1885.0
+    ],
+    "obesity_percent": [
+     90,
+     110
+    ]
+   },
+   "levels": {
+    "bmi": 2,
+    "weight_kg": 1,
+    "body_fat_percent": 1,
+    "body_fat_kg": 1,
+    "fat_free_mass_kg": 1,
+    "water_kg": 1,
+    "protein_kg": 1,
+    "mineral_kg": 1,
+    "muscle_kg": 1,
+    "bone_kg": 1,
+    "skeletal_muscle_kg": 1,
+    "intracellular_water_kg": 1,
+    "extracellular_water_kg": 1,
+    "body_cell_mass_kg": 1,
+    "subcutaneous_fat_percent": 1,
+    "subcutaneous_fat_kg": 1,
+    "visceral_fat": 1,
+    "waist_hip_ratio": 1,
+    "basal_metabolic_rate": 1,
+    "obesity_percent": 1
+   }
+  }
+ },
+ "female_29": {
+  "input": {
+   "sex": 0,
+   "age": 29,
+   "height_cm": 165,
+   "weight_kg": 60.4,
+   "z20_ohm": {
+    "right_arm": 382.0,
+    "left_arm": 390.5,
+    "trunk": 26.8,
+    "right_leg": 289.0,
+    "left_leg": 285.0
+   },
+   "z100_ohm": {
+    "right_arm": 341.0,
+    "left_arm": 348.0,
+    "trunk": 25.1,
+    "right_leg": 254.0,
+    "left_leg": 251.5
+   }
+  },
+  "expected": {
+   "weight_kg": 60.4,
+   "bmi": 22.1,
+   "body_fat_percent": 23.5,
+   "body_fat_kg": 14.2,
+   "fat_free_mass_kg": 46.2,
+   "muscle_kg": 43.0,
+   "muscle_percent": 71.2,
+   "skeletal_muscle_kg": 25.5,
+   "skeletal_muscle_percent": 42.2,
+   "water_kg": 33.9,
+   "water_percent": 56.1,
+   "intracellular_water_kg": 20.8,
+   "extracellular_water_kg": 13.1,
+   "protein_kg": 9.1,
+   "protein_percent": 15.0,
+   "mineral_kg": 3.2,
+   "bone_kg": 2.5,
+   "body_cell_mass_kg": 30.4,
+   "subcutaneous_fat_kg": 12.5,
+   "subcutaneous_fat_percent": 20.6,
+   "visceral_fat": 6,
+   "waist_hip_ratio": 0.82,
+   "skeletal_muscle_index": 7.0,
+   "basal_metabolic_rate": 1367,
+   "daily_calorie_intake": 1777,
+   "body_score": 80,
+   "body_age": 24,
+   "body_type": 8,
+   "obesity_percent": 105,
+   "ideal_weight_kg": 57.2,
+   "target_weight_kg": 60.0,
+   "weight_control_kg": -0.4,
+   "fat_control_kg": -0.4,
+   "muscle_control_kg": 0.0,
+   "segment_fat_kg": {
+    "right_arm": 0.8,
+    "left_arm": 0.9,
+    "trunk": 7.2,
+    "right_leg": 1.9,
+    "left_leg": 1.8
+   },
+   "segment_fat_percent": {
+    "right_arm": 88.8,
+    "left_arm": 100.0,
+    "trunk": 135.8,
+    "right_leg": 79.1,
+    "left_leg": 75.0
+   },
+   "segment_fat_level": {
+    "right_arm": 1,
+    "left_arm": 1,
+    "trunk": 1,
+    "right_leg": 0,
+    "left_leg": 0
+   },
+   "segment_muscle_kg": {
+    "right_arm": 2.3,
+    "left_arm": 2.3,
+    "trunk": 20.4,
+    "right_leg": 7.3,
+    "left_leg": 7.4
+   },
+   "segment_muscle_percent": {
+    "right_arm": 109.5,
+    "left_arm": 109.5,
+    "trunk": 108.5,
+    "right_leg": 112.3,
+    "left_leg": 113.8
+   },
+   "segment_muscle_level": {
+    "right_arm": 1,
+    "left_arm": 1,
+    "trunk": 1,
+    "right_leg": 2,
+    "left_leg": 2
+   },
+   "balance": {
+    "muscle_arms": 0,
+    "muscle_legs": 0,
+    "muscle_arms_vs_legs": 0,
+    "fat_arms": 0,
+    "fat_legs": 0
+   },
+   "ranges": {
+    "bmi": [
+     18.5,
+     23.0
+    ],
+    "weight_kg": [
+     48.6,
+     65.8
+    ],
+    "body_fat_percent": [
+     18.0,
+     28.0
+    ],
+    "body_fat_kg": [
+     11.4,
+     18.3
+    ],
+    "fat_free_mass_kg": [
+     37.2,
+     47.5
+    ],
+    "water_kg": [
+     29.1,
+     35.5
+    ],
+    "protein_kg": [
+     7.8,
+     9.6
+    ],
+    "mineral_kg": [
+     2.6,
+     3.2
+    ],
+    "muscle_kg": [
+     38.3,
+     46.8
+    ],
+    "bone_kg": [
+     2.3,
+     2.8
+    ],
+    "skeletal_muscle_kg": [
+     21.6,
+     26.4
+    ],
+    "intracellular_water_kg": [
+     18.5,
+     22.6
+    ],
+    "extracellular_water_kg": [
+     11.4,
+     13.8
+    ],
+    "body_cell_mass_kg": [
+     26.5,
+     32.4
+    ],
+    "subcutaneous_fat_percent": [
+     18.5,
+     26.7
+    ],
+    "subcutaneous_fat_kg": [
+     10.5,
+     15.2
+    ],
+    "visceral_fat": [
+     1,
+     9
+    ],
+    "waist_hip_ratio": [
+     0.75,
+     0.85
+    ],
+    "basal_metabolic_rate": [
+     1274.0,
+     1475.0
+    ],
+    "obesity_percent": [
+     90,
+     110
+    ]
+   },
+   "levels": {
+    "bmi": 1,
+    "weight_kg": 1,
+    "body_fat_percent": 1,
+    "body_fat_kg": 1,
+    "fat_free_mass_kg": 1,
+    "water_kg": 1,
+    "protein_kg": 1,
+    "mineral_kg": 2,
+    "muscle_kg": 1,
+    "bone_kg": 1,
+    "skeletal_muscle_kg": 1,
+    "intracellular_water_kg": 1,
+    "extracellular_water_kg": 1,
+    "body_cell_mass_kg": 1,
+    "subcutaneous_fat_percent": 1,
+    "subcutaneous_fat_kg": 1,
+    "visceral_fat": 1,
+    "waist_hip_ratio": 1,
+    "basal_metabolic_rate": 1,
+    "obesity_percent": 1
+   }
+  }
+ },
+ "male_52_heavy": {
+  "input": {
+   "sex": 1,
+   "age": 52,
+   "height_cm": 172,
+   "weight_kg": 95.35,
+   "z20_ohm": {
+    "right_arm": 276.0,
+    "left_arm": 281.5,
+    "trunk": 21.5,
+    "right_leg": 231.0,
+    "left_leg": 234.5
+   },
+   "z100_ohm": {
+    "right_arm": 239.0,
+    "left_arm": 244.0,
+    "trunk": 20.3,
+    "right_leg": 198.5,
+    "left_leg": 202.0
+   }
+  },
+  "expected": {
+   "weight_kg": 95.3,
+   "bmi": 32.2,
+   "body_fat_percent": 29.8,
+   "body_fat_kg": 28.4,
+   "fat_free_mass_kg": 66.9,
+   "muscle_kg": 62.4,
+   "muscle_percent": 65.4,
+   "skeletal_muscle_kg": 38.2,
+   "skeletal_muscle_percent": 40.0,
+   "water_kg": 49.1,
+   "water_percent": 51.5,
+   "intracellular_water_kg": 30.9,
+   "extracellular_water_kg": 18.2,
+   "protein_kg": 13.3,
+   "protein_percent": 13.9,
+   "mineral_kg": 4.5,
+   "bone_kg": 3.6,
+   "body_cell_mass_kg": 44.2,
+   "subcutaneous_fat_kg": 25.0,
+   "subcutaneous_fat_percent": 26.2,
+   "visceral_fat": 12,
+   "waist_hip_ratio": 0.97,
+   "skeletal_muscle_index": 9.3,
+   "basal_metabolic_rate": 1815,
+   "daily_calorie_intake": 2359,
+   "body_score": 74,
+   "body_age": 60,
+   "body_type": 5,
+   "obesity_percent": 146,
+   "ideal_weight_kg": 65.1,
+   "target_weight_kg": 78.8,
+   "weight_control_kg": -16.5,
+   "fat_control_kg": -16.5,
+   "muscle_control_kg": 0.0,
+   "segment_fat_kg": {
+    "right_arm": 1.6,
+    "left_arm": 1.7,
+    "trunk": 14.7,
+    "right_leg": 3.8,
+    "left_leg": 3.9
+   },
+   "segment_fat_percent": {
+    "right_arm": 320.0,
+    "left_arm": 340.0,
+    "trunk": 367.5,
+    "right_leg": 253.3,
+    "left_leg": 260.0
+   },
+   "segment_fat_level": {
+    "right_arm": 2,
+    "left_arm": 2,
+    "trunk": 2,
+    "right_leg": 2,
+    "left_leg": 2
+   },
+   "segment_muscle_kg": {
+    "right_arm": 3.5,
+    "left_arm": 3.3,
+    "trunk": 29.7,
+    "right_leg": 10.6,
+    "left_leg": 10.4
+   },
+   "segment_muscle_percent": {
+    "right_arm": 102.9,
+    "left_arm": 97.0,
+    "trunk": 105.6,
+    "right_leg": 108.1,
+    "left_leg": 106.1
+   },
+   "segment_muscle_level": {
+    "right_arm": 1,
+    "left_arm": 1,
+    "trunk": 1,
+    "right_leg": 1,
+    "left_leg": 1
+   },
+   "balance": {
+    "muscle_arms": 0,
+    "muscle_legs": 0,
+    "muscle_arms_vs_legs": 0,
+    "fat_arms": 0,
+    "fat_legs": 0
+   },
+   "ranges": {
+    "bmi": [
+     18.5,
+     23.0
+    ],
+    "weight_kg": [
+     55.3,
+     74.9
+    ],
+    "body_fat_percent": [
+     10.0,
+     20.0
+    ],
+    "body_fat_kg": [
+     7.8,
+     15.6
+    ],
+    "fat_free_mass_kg": [
+     47.5,
+     59.3
+    ],
+    "water_kg": [
+     36.5,
+     44.7
+    ],
+    "protein_kg": [
+     9.8,
+     11.9
+    ],
+    "mineral_kg": [
+     3.3,
+     4.1
+    ],
+    "muscle_kg": [
+     47.0,
+     64.6
+    ],
+    "bone_kg": [
+     2.8,
+     3.5
+    ],
+    "skeletal_muscle_kg": [
+     27.8,
+     34.0
+    ],
+    "intracellular_water_kg": [
+     22.7,
+     27.7
+    ],
+    "extracellular_water_kg": [
+     13.9,
+     17.0
+    ],
+    "body_cell_mass_kg": [
+     32.5,
+     39.7
+    ],
+    "subcutaneous_fat_percent": [
+     8.6,
+     16.7
+    ],
+    "subcutaneous_fat_kg": [
+     5.5,
+     10.8
+    ],
+    "visceral_fat": [
+     1,
+     9
+    ],
+    "waist_hip_ratio": [
+     0.8,
+     0.9
+    ],
+    "basal_metabolic_rate": [
+     1945.0,
+     2295.0
+    ],
+    "obesity_percent": [
+     90,
+     110
+    ]
+   },
+   "levels": {
+    "bmi": 2,
+    "weight_kg": 2,
+    "body_fat_percent": 2,
+    "body_fat_kg": 2,
+    "fat_free_mass_kg": 2,
+    "water_kg": 2,
+    "protein_kg": 2,
+    "mineral_kg": 2,
+    "muscle_kg": 1,
+    "bone_kg": 2,
+    "skeletal_muscle_kg": 2,
+    "intracellular_water_kg": 2,
+    "extracellular_water_kg": 2,
+    "body_cell_mass_kg": 2,
+    "subcutaneous_fat_percent": 2,
+    "subcutaneous_fat_kg": 2,
+    "visceral_fat": 2,
+    "waist_hip_ratio": 2,
+    "basal_metabolic_rate": 0,
+    "obesity_percent": 2
+   }
+  }
+ },
+ "female_67_light": {
+  "input": {
+   "sex": 0,
+   "age": 67,
+   "height_cm": 158,
+   "weight_kg": 49.85,
+   "z20_ohm": {
+    "right_arm": 441.0,
+    "left_arm": 437.0,
+    "trunk": 30.1,
+    "right_leg": 332.0,
+    "left_leg": 327.5
+   },
+   "z100_ohm": {
+    "right_arm": 402.0,
+    "left_arm": 399.0,
+    "trunk": 28.7,
+    "right_leg": 301.0,
+    "left_leg": 298.0
+   }
+  },
+  "expected": {
+   "weight_kg": 49.8,
+   "bmi": 19.9,
+   "body_fat_percent": 27.5,
+   "body_fat_kg": 13.7,
+   "fat_free_mass_kg": 36.1,
+   "muscle_kg": 33.6,
+   "muscle_percent": 67.4,
+   "skeletal_muscle_kg": 19.3,
+   "skeletal_muscle_percent": 38.7,
+   "water_kg": 26.5,
+   "water_percent": 53.2,
+   "intracellular_water_kg": 15.8,
+   "extracellular_water_kg": 10.7,
+   "protein_kg": 7.1,
+   "protein_percent": 14.2,
+   "mineral_kg": 2.5,
+   "bone_kg": 2.0,
+   "body_cell_mass_kg": 23.7,
+   "subcutaneous_fat_kg": 12.3,
+   "subcutaneous_fat_percent": 24.6,
+   "visceral_fat": 5,
+   "waist_hip_ratio": 0.82,
+   "skeletal_muscle_index": 5.9,
+   "basal_metabolic_rate": 1149,
+   "daily_calorie_intake": 1493,
+   "body_score": 73,
+   "body_age": 65,
+   "body_type": 7,
+   "obesity_percent": 95,
+   "ideal_weight_kg": 52.4,
+   "target_weight_kg": 52.4,
+   "weight_control_kg": 2.6,
+   "fat_control_kg": -1.6,
+   "muscle_control_kg": 4.2,
+   "segment_fat_kg": {
+    "right_arm": 0.7,
+    "left_arm": 0.8,
+    "trunk": 6.9,
+    "right_leg": 1.8,
+    "left_leg": 1.7
+   },
+   "segment_fat_percent": {
+    "right_arm": 77.7,
+    "left_arm": 88.8,
+    "trunk": 140.8,
+    "right_leg": 81.8,
+    "left_leg": 77.2
+   },
+   "segment_fat_level": {
+    "right_arm": 0,
+    "left_arm": 1,
+    "trunk": 1,
+    "right_leg": 1,
+    "left_leg": 0
+   },
+   "segment_muscle_kg": {
+    "right_arm": 1.8,
+    "left_arm": 1.7,
+    "trunk": 15.9,
+    "right_leg": 5.6,
+    "left_leg": 5.7
+   },
+   "segment_muscle_percent": {
+    "right_arm": 105.8,
+    "left_arm": 100.0,
+    "trunk": 100.0,
+    "right_leg": 101.8,
+    "left_leg": 103.6
+   },
+   "segment_muscle_level": {
+    "right_arm": 1,
+    "left_arm": 1,
+    "trunk": 1,
+    "right_leg": 1,
+    "left_leg": 1
+   },
+   "balance": {
+    "muscle_arms": 0,
+    "muscle_legs": 0,
+    "muscle_arms_vs_legs": 0,
+    "fat_arms": 0,
+    "fat_legs": 0
+   },
+   "ranges": {
+    "bmi": [
+     18.5,
+     23.0
+    ],
+    "weight_kg": [
+     44.5,
+     60.3
+    ],
+    "body_fat_percent": [
+     18.0,
+     28.0
+    ],
+    "body_fat_kg": [
+     10.5,
+     16.8
+    ],
+    "fat_free_mass_kg": [
+     34.0,
+     43.5
+    ],
+    "water_kg": [
+     26.6,
+     32.6
+    ],
+    "protein_kg": [
+     7.2,
+     8.8
+    ],
+    "mineral_kg": [
+     2.4,
+     3.0
+    ],
+    "muscle_kg": [
+     35.1,
+     42.9
+    ],
+    "bone_kg": [
+     2.1,
+     2.6
+    ],
+    "skeletal_muscle_kg": [
+     19.7,
+     24.1
+    ],
+    "intracellular_water_kg": [
+     16.9,
+     20.7
+    ],
+    "extracellular_water_kg": [
+     10.4,
+     12.7
+    ],
+    "body_cell_mass_kg": [
+     24.3,
+     29.7
+    ],
+    "subcutaneous_fat_percent": [
+     18.5,
+     26.7
+    ],
+    "subcutaneous_fat_kg": [
+     9.6,
+     13.9
+    ],
+    "visceral_fat": [
+     1,
+     9
+    ],
+    "waist_hip_ratio": [
+     0.75,
+     0.85
+    ],
+    "basal_metabolic_rate": [
+     1115.0,
+     1281.0
+    ],
+    "obesity_percent": [
+     90,
+     110
+    ]
+   },
+   "levels": {
+    "bmi": 1,
+    "weight_kg": 1,
+    "body_fat_percent": 1,
+    "body_fat_kg": 1,
+    "fat_free_mass_kg": 1,
+    "water_kg": 0,
+    "protein_kg": 0,
+    "mineral_kg": 1,
+    "muscle_kg": 0,
+    "bone_kg": 0,
+    "skeletal_muscle_kg": 0,
+    "intracellular_water_kg": 0,
+    "extracellular_water_kg": 1,
+    "body_cell_mass_kg": 0,
+    "subcutaneous_fat_percent": 1,
+    "subcutaneous_fat_kg": 1,
+    "visceral_fat": 1,
+    "waist_hip_ratio": 1,
+    "basal_metabolic_rate": 1,
+    "obesity_percent": 1
+   }
+  }
+ }
+}

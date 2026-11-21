@@ -10,11 +10,28 @@
       },
       "bluetooth_confirm": {
         "description": "{name} einrichten?"
+      },
+      "profile": {
+        "title": "Profil",
+        "description": "Körperfett, Muskelmasse und die übrigen Körperwerte werden aus den gemessenen Impedanzen zusammen mit Geschlecht, Größe und Alter geschätzt. Ohne Profil gibt es nur Gewicht, Herzfrequenz und Impedanzen.",
+        "data": {
+          "sex": "Geschlecht",
+          "height": "Größe",
+          "birthday": "Geburtsdatum",
+          "age": "Alter"
+        },
+        "data_description": {
+          "birthday": "Empfohlen: Das Alter stimmt dann immer.",
+          "age": "Wird nur verwendet, wenn kein Geburtsdatum angegeben ist, und muss jedes Jahr von Hand angepasst werden."
+        }
       }
     },
     "abort": {
       "already_configured": "Diese Waage ist bereits eingerichtet.",
       "no_devices_found": "Kein Bluetooth-Gerät gefunden. Stell dich auf die Waage und versuche es erneut."
+    },
+    "error": {
+      "age_required": "Bitte Geburtsdatum oder Alter angeben."
     }
   },
   "entity": {
@@ -60,6 +77,175 @@
       },
       "z100_left_leg": {
         "name": "Impedanz linkes Bein 100 kHz"
+      },
+      "bmi": {
+        "name": "BMI"
+      },
+      "body_fat_percent": {
+        "name": "Körperfett"
+      },
+      "body_fat_kg": {
+        "name": "Fettmasse"
+      },
+      "fat_free_mass_kg": {
+        "name": "Fettfreie Masse"
+      },
+      "muscle_kg": {
+        "name": "Muskelmasse"
+      },
+      "muscle_percent": {
+        "name": "Muskelanteil"
+      },
+      "skeletal_muscle_kg": {
+        "name": "Skelettmuskelmasse"
+      },
+      "skeletal_muscle_percent": {
+        "name": "Skelettmuskelanteil"
+      },
+      "water_kg": {
+        "name": "Körperwasser (Masse)"
+      },
+      "water_percent": {
+        "name": "Körperwasser"
+      },
+      "intracellular_water_kg": {
+        "name": "Intrazelluläres Wasser"
+      },
+      "extracellular_water_kg": {
+        "name": "Extrazelluläres Wasser"
+      },
+      "protein_kg": {
+        "name": "Protein (Masse)"
+      },
+      "protein_percent": {
+        "name": "Protein"
+      },
+      "mineral_kg": {
+        "name": "Mineralien"
+      },
+      "bone_kg": {
+        "name": "Knochenmasse"
+      },
+      "body_cell_mass_kg": {
+        "name": "Körperzellmasse"
+      },
+      "subcutaneous_fat_kg": {
+        "name": "Unterhautfett (Masse)"
+      },
+      "subcutaneous_fat_percent": {
+        "name": "Unterhautfett"
+      },
+      "visceral_fat": {
+        "name": "Viszeralfett"
+      },
+      "waist_hip_ratio": {
+        "name": "Taille-Hüft-Verhältnis"
+      },
+      "skeletal_muscle_index": {
+        "name": "Skelettmuskelindex"
+      },
+      "basal_metabolic_rate": {
+        "name": "Grundumsatz"
+      },
+      "daily_calorie_intake": {
+        "name": "Empfohlene Kalorienzufuhr"
+      },
+      "body_score": {
+        "name": "Körperpunktzahl"
+      },
+      "body_age": {
+        "name": "Körperalter"
+      },
+      "obesity_percent": {
+        "name": "Adipositasgrad"
+      },
+      "body_type": {
+        "name": "Körpertyp",
+        "state": {
+          "fat_low_muscle_low": "Fett niedrig, Muskeln niedrig",
+          "fat_low_muscle_normal": "Fett niedrig, Muskeln normal",
+          "fat_low_muscle_high": "Fett niedrig, Muskeln hoch",
+          "fat_normal_muscle_low": "Fett normal, Muskeln niedrig",
+          "fat_normal_muscle_normal": "Fett normal, Muskeln normal",
+          "fat_normal_muscle_high": "Fett normal, Muskeln hoch",
+          "fat_high_muscle_low": "Fett hoch, Muskeln niedrig",
+          "fat_high_muscle_normal": "Fett hoch, Muskeln normal",
+          "fat_high_muscle_high": "Fett hoch, Muskeln hoch"
+        }
+      },
+      "ideal_weight_kg": {
+        "name": "Idealgewicht"
+      },
+      "target_weight_kg": {
+        "name": "Zielgewicht"
+      },
+      "weight_control_kg": {
+        "name": "Gewichtskontrolle"
+      },
+      "fat_control_kg": {
+        "name": "Fettkontrolle"
+      },
+      "muscle_control_kg": {
+        "name": "Muskelkontrolle"
+      },
+      "fat_right_arm": {
+        "name": "Fettmasse rechter Arm"
+      },
+      "muscle_right_arm": {
+        "name": "Muskelmasse rechter Arm"
+      },
+      "fat_left_arm": {
+        "name": "Fettmasse linker Arm"
+      },
+      "muscle_left_arm": {
+        "name": "Muskelmasse linker Arm"
+      },
+      "fat_trunk": {
+        "name": "Fettmasse Rumpf"
+      },
+      "muscle_trunk": {
+        "name": "Muskelmasse Rumpf"
+      },
+      "fat_right_leg": {
+        "name": "Fettmasse rechtes Bein"
+      },
+      "muscle_right_leg": {
+        "name": "Muskelmasse rechtes Bein"
+      },
+      "fat_left_leg": {
+        "name": "Fettmasse linkes Bein"
+      },
+      "muscle_left_leg": {
+        "name": "Muskelmasse linkes Bein"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Profil",
+        "description": "Körperfett, Muskelmasse und die übrigen Körperwerte werden aus den gemessenen Impedanzen zusammen mit Geschlecht, Größe und Alter geschätzt. Ohne Profil gibt es nur Gewicht, Herzfrequenz und Impedanzen.",
+        "data": {
+          "sex": "Geschlecht",
+          "height": "Größe",
+          "birthday": "Geburtsdatum",
+          "age": "Alter"
+        },
+        "data_description": {
+          "birthday": "Empfohlen: Das Alter stimmt dann immer.",
+          "age": "Wird nur verwendet, wenn kein Geburtsdatum angegeben ist, und muss jedes Jahr von Hand angepasst werden."
+        }
+      }
+    },
+    "error": {
+      "age_required": "Bitte Geburtsdatum oder Alter angeben."
+    }
+  },
+  "selector": {
+    "sex": {
+      "options": {
+        "male": "Männlich",
+        "female": "Weiblich"
       }
     }
   }

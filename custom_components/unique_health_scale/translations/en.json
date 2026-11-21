@@ -10,11 +10,28 @@
       },
       "bluetooth_confirm": {
         "description": "Set up {name}?"
+      },
+      "profile": {
+        "title": "Profile",
+        "description": "Body fat, muscle mass and the other body values are estimated from the measured impedances together with sex, height and age. Without a profile only weight, heart rate and impedances are available.",
+        "data": {
+          "sex": "Sex",
+          "height": "Height",
+          "birthday": "Date of birth",
+          "age": "Age"
+        },
+        "data_description": {
+          "birthday": "Recommended: the age is then always up to date.",
+          "age": "Only used if no date of birth is given; it has to be adjusted manually every year."
+        }
       }
     },
     "abort": {
       "already_configured": "This scale is already configured.",
       "no_devices_found": "No Bluetooth device found. Step on the scale and try again."
+    },
+    "error": {
+      "age_required": "Please enter a date of birth or an age."
     }
   },
   "entity": {
@@ -60,6 +77,175 @@
       },
       "z100_left_leg": {
         "name": "Impedance left leg 100 kHz"
+      },
+      "bmi": {
+        "name": "BMI"
+      },
+      "body_fat_percent": {
+        "name": "Body fat"
+      },
+      "body_fat_kg": {
+        "name": "Fat mass"
+      },
+      "fat_free_mass_kg": {
+        "name": "Fat-free mass"
+      },
+      "muscle_kg": {
+        "name": "Muscle mass"
+      },
+      "muscle_percent": {
+        "name": "Muscle"
+      },
+      "skeletal_muscle_kg": {
+        "name": "Skeletal muscle mass"
+      },
+      "skeletal_muscle_percent": {
+        "name": "Skeletal muscle"
+      },
+      "water_kg": {
+        "name": "Body water mass"
+      },
+      "water_percent": {
+        "name": "Body water"
+      },
+      "intracellular_water_kg": {
+        "name": "Intracellular water"
+      },
+      "extracellular_water_kg": {
+        "name": "Extracellular water"
+      },
+      "protein_kg": {
+        "name": "Protein mass"
+      },
+      "protein_percent": {
+        "name": "Protein"
+      },
+      "mineral_kg": {
+        "name": "Minerals"
+      },
+      "bone_kg": {
+        "name": "Bone mass"
+      },
+      "body_cell_mass_kg": {
+        "name": "Body cell mass"
+      },
+      "subcutaneous_fat_kg": {
+        "name": "Subcutaneous fat mass"
+      },
+      "subcutaneous_fat_percent": {
+        "name": "Subcutaneous fat"
+      },
+      "visceral_fat": {
+        "name": "Visceral fat"
+      },
+      "waist_hip_ratio": {
+        "name": "Waist-hip ratio"
+      },
+      "skeletal_muscle_index": {
+        "name": "Skeletal muscle index"
+      },
+      "basal_metabolic_rate": {
+        "name": "Basal metabolic rate"
+      },
+      "daily_calorie_intake": {
+        "name": "Recommended calorie intake"
+      },
+      "body_score": {
+        "name": "Body score"
+      },
+      "body_age": {
+        "name": "Body age"
+      },
+      "obesity_percent": {
+        "name": "Obesity degree"
+      },
+      "body_type": {
+        "name": "Body type",
+        "state": {
+          "fat_low_muscle_low": "Fat low, muscle low",
+          "fat_low_muscle_normal": "Fat low, muscle normal",
+          "fat_low_muscle_high": "Fat low, muscle high",
+          "fat_normal_muscle_low": "Fat normal, muscle low",
+          "fat_normal_muscle_normal": "Fat normal, muscle normal",
+          "fat_normal_muscle_high": "Fat normal, muscle high",
+          "fat_high_muscle_low": "Fat high, muscle low",
+          "fat_high_muscle_normal": "Fat high, muscle normal",
+          "fat_high_muscle_high": "Fat high, muscle high"
+        }
+      },
+      "ideal_weight_kg": {
+        "name": "Ideal weight"
+      },
+      "target_weight_kg": {
+        "name": "Target weight"
+      },
+      "weight_control_kg": {
+        "name": "Weight control"
+      },
+      "fat_control_kg": {
+        "name": "Fat control"
+      },
+      "muscle_control_kg": {
+        "name": "Muscle control"
+      },
+      "fat_right_arm": {
+        "name": "Fat mass right arm"
+      },
+      "muscle_right_arm": {
+        "name": "Muscle mass right arm"
+      },
+      "fat_left_arm": {
+        "name": "Fat mass left arm"
+      },
+      "muscle_left_arm": {
+        "name": "Muscle mass left arm"
+      },
+      "fat_trunk": {
+        "name": "Fat mass trunk"
+      },
+      "muscle_trunk": {
+        "name": "Muscle mass trunk"
+      },
+      "fat_right_leg": {
+        "name": "Fat mass right leg"
+      },
+      "muscle_right_leg": {
+        "name": "Muscle mass right leg"
+      },
+      "fat_left_leg": {
+        "name": "Fat mass left leg"
+      },
+      "muscle_left_leg": {
+        "name": "Muscle mass left leg"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Profile",
+        "description": "Body fat, muscle mass and the other body values are estimated from the measured impedances together with sex, height and age. Without a profile only weight, heart rate and impedances are available.",
+        "data": {
+          "sex": "Sex",
+          "height": "Height",
+          "birthday": "Date of birth",
+          "age": "Age"
+        },
+        "data_description": {
+          "birthday": "Recommended: the age is then always up to date.",
+          "age": "Only used if no date of birth is given; it has to be adjusted manually every year."
+        }
+      }
+    },
+    "error": {
+      "age_required": "Please enter a date of birth or an age."
+    }
+  },
+  "selector": {
+    "sex": {
+      "options": {
+        "male": "Male",
+        "female": "Female"
       }
     }
   }

@@ -19,3 +19,9 @@ RAW_HISTORY_SIZE = 60
 # Verbindung: maximale Dauer einer Messsitzung und Pause zwischen Versuchen
 SESSION_TIMEOUT = 120.0
 CONNECT_COOLDOWN = 15.0
+
+# Profil der Person auf der Waage (Optionen des Config-Eintrags)
+CONF_SEX = "sex"
+CONF_HEIGHT = "height"
+CONF_BIRTHDAY = "birthday"
+CONF_AGE = "age"

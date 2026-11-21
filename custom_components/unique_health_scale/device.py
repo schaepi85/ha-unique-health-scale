@@ -19,6 +19,9 @@ from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 
+from homeassistant.util import dt as dt_util
+
+from .bodycomp import SEGMENTS, BodyComposition, BodyCompositionError, compute
 from .const import (
     CONNECT_COOLDOWN,
     LEFU_SERVICE_UUID,
@@ -27,6 +30,7 @@ from .const import (
     SESSION_TIMEOUT,
 )
 from .parser import ACTIVE_STATES, LOCKED_STATES, Measurement, find_cf_frame
+from .profile import Profile
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,6 +53,11 @@ class ScaleDevice:
         self._session_task: asyncio.Task[None] | None = None
         self._last_attempt = 0.0
         self._last_adv: str | None = None
+        self.profile = Profile.from_options(entry.options)
+        self.body: BodyComposition | None = None
+        self.body_state = "kein Profil hinterlegt" if self.profile is None else "wartet auf Messung"
+        self.body_serial = 0
+        self._body_input: tuple[Any, ...] | None = None
 
     # ------------------------------------------------------------------ Sensoren
 
@@ -60,8 +69,36 @@ class ScaleDevice:
 
     @callback
     def _async_notify(self) -> None:
+        self._async_update_body()
         for listener in list(self._listeners):
             listener()
+
+    @callback
+    def _async_update_body(self) -> None:
+        """Koerperwerte berechnen, sobald Gewicht und alle Impedanzen da sind."""
+        weight = self.measurement.weight_kg
+        ohm = self.measurement.impedances_ohm
+        if self.profile is None or not weight or ohm is None:
+            return
+        measured = (weight, *ohm.values())
+        if measured == self._body_input:
+            return
+        self._body_input = measured
+        try:
+            self.body = compute(
+                self.profile.sex,
+                self.profile.age_on(dt_util.now().date()),
+                self.profile.height_cm,
+                weight,
+                {segment: ohm[f"z20_{segment}"] for segment in SEGMENTS},
+                {segment: ohm[f"z100_{segment}"] for segment in SEGMENTS},
+            )
+        except BodyCompositionError as err:
+            self.body_state = f"Messung ausserhalb des gueltigen Bereichs: {err.reason}"
+            _LOGGER.warning("Koerperwerte nicht berechenbar (%s)", err.reason)
+            return
+        self.body_state = "berechnet"
+        self.body_serial += 1
 
     @callback
     def _record(self, source: str, data: str) -> None:
