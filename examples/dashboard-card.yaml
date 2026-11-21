@@ -1,0 +1,471 @@
+# Beispiel-Dashboardkarte für die Unique Health Scale (Lefu)
+#
+# Zeigt alle Körperwerte mit Einstufung (blau = niedrig, grün = normal,
+# orange = hoch) und Verläufe über 90 Tage. Tippen auf einen Wert öffnet
+# seinen eigenen Verlauf.
+#
+# Benötigt (HACS → Frontend): Mushroom, stack-in-card, apexcharts-card;
+# card-mod nur für den Hintergrund (sonst den card_mod-Block löschen).
+#
+# Die Entity-IDs gehen von einem Gerät namens "Smart Scale P1" und deutscher
+# Oberfläche aus. Heißen sie bei dir anders, "sensor.smart_scale_p1_" per
+# Suchen & Ersetzen anpassen.
+#
+# Einfügen: Dashboard bearbeiten → Karte hinzufügen → Manuell → Inhalt einfügen.
+
+type: custom:stack-in-card
+mode: vertical
+card_mod:
+  style: |
+    ha-card {
+      background: linear-gradient(135deg, rgba(156, 39, 176, 0.1) 0%, rgba(156, 39, 176, 0.05) 100%);
+      border: 1px solid rgba(156, 39, 176, 0.2);
+    }
+cards:
+- type: custom:mushroom-title-card
+  title: ⚖️ Smart Scale P1
+  subtitle: Körperanalyse & Verlauf
+- type: grid
+  columns: 2
+  square: false
+  cards:
+  - type: custom:mushroom-template-card
+    entity: sensor.smart_scale_p1_gewicht
+    icon: mdi:scale-bathroom
+    primary: '{% set s=states("sensor.smart_scale_p1_gewicht") %}{% if s in ["unknown","unavailable","none"] %}–{% else %}{{ "%.1f"|format(s|float) }} {{ state_attr("sensor.smart_scale_p1_gewicht","unit_of_measurement") or "" }}{% endif %}'
+    secondary: Gewicht{% set r=state_attr("sensor.smart_scale_p1_gewicht","rating") %}{% if r %} · {{ {"low":"niedrig","normal":"normal","high":"hoch"}.get(r,r) }}{% endif %}
+    icon_color: '{{ {"low":"blue","normal":"green","high":"orange"}.get(state_attr("sensor.smart_scale_p1_gewicht","rating"),"teal") }}'
+    tap_action:
+      action: more-info
+  - type: custom:mushroom-template-card
+    entity: sensor.smart_scale_p1_bmi
+    icon: mdi:human-male-height
+    primary: '{% set s=states("sensor.smart_scale_p1_bmi") %}{% if s in ["unknown","unavailable","none"] %}–{% else %}{{ "%.1f"|format(s|float) }} {{ state_attr("sensor.smart_scale_p1_bmi","unit_of_measurement") or "" }}{% endif %}'
+    secondary: BMI{% set r=state_attr("sensor.smart_scale_p1_bmi","rating") %}{% if r %} · {{ {"low":"niedrig","normal":"normal","high":"hoch"}.get(r,r) }}{% endif %}
+    icon_color: '{{ {"low":"blue","normal":"green","high":"orange"}.get(state_attr("sensor.smart_scale_p1_bmi","rating"),"teal") }}'
+    tap_action:
+      action: more-info
+  - type: custom:mushroom-template-card
+    entity: sensor.smart_scale_p1_korperfett
+    icon: mdi:percent
+    primary: '{% set s=states("sensor.smart_scale_p1_korperfett") %}{% if s in ["unknown","unavailable","none"] %}–{% else %}{{ "%.1f"|format(s|float) }} {{ state_attr("sensor.smart_scale_p1_korperfett","unit_of_measurement") or "" }}{% endif %}'
+    secondary: Körperfett{% set r=state_attr("sensor.smart_scale_p1_korperfett","rating") %}{% if r %} · {{ {"low":"niedrig","normal":"normal","high":"hoch"}.get(r,r) }}{% endif %}
+    icon_color: '{{ {"low":"blue","normal":"green","high":"orange"}.get(state_attr("sensor.smart_scale_p1_korperfett","rating"),"teal") }}'
+    tap_action:
+      action: more-info
+  - type: custom:mushroom-template-card
+    entity: sensor.smart_scale_p1_muskelmasse
+    icon: mdi:arm-flex
+    primary: '{% set s=states("sensor.smart_scale_p1_muskelmasse") %}{% if s in ["unknown","unavailable","none"] %}–{% else %}{{ "%.1f"|format(s|float) }} {{ state_attr("sensor.smart_scale_p1_muskelmasse","unit_of_measurement") or "" }}{% endif %}'
+    secondary: Muskelmasse{% set r=state_attr("sensor.smart_scale_p1_muskelmasse","rating") %}{% if r %} · {{ {"low":"niedrig","normal":"normal","high":"hoch"}.get(r,r) }}{% endif %}
+    icon_color: '{{ {"low":"blue","normal":"green","high":"orange"}.get(state_attr("sensor.smart_scale_p1_muskelmasse","rating"),"teal") }}'
+    tap_action:
+      action: more-info
+  - type: custom:mushroom-template-card
+    entity: sensor.smart_scale_p1_viszeralfett
+    icon: mdi:stomach
+    primary: '{% set s=states("sensor.smart_scale_p1_viszeralfett") %}{% if s in ["unknown","unavailable","none"] %}–{% else %}{{ "%.0f"|format(s|float) }} {{ state_attr("sensor.smart_scale_p1_viszeralfett","unit_of_measurement") or "" }}{% endif %}'
+    secondary: Viszeralfett{% set r=state_attr("sensor.smart_scale_p1_viszeralfett","rating") %}{% if r %} · {{ {"low":"niedrig","normal":"normal","high":"hoch"}.get(r,r) }}{% endif %}
+    icon_color: '{{ {"low":"blue","normal":"green","high":"orange"}.get(state_attr("sensor.smart_scale_p1_viszeralfett","rating"),"teal") }}'
+    tap_action:
+      action: more-info
+  - type: custom:mushroom-template-card
+    entity: sensor.smart_scale_p1_korperpunktzahl
+    icon: mdi:star-circle
+    primary: '{% set s=states("sensor.smart_scale_p1_korperpunktzahl") %}{% if s in ["unknown","unavailable","none"] %}–{% else %}{{ "%.0f"|format(s|float) }} {{ state_attr("sensor.smart_scale_p1_korperpunktzahl","unit_of_measurement") or "" }}{% endif %}'
+    secondary: Körperpunktzahl{% set r=state_attr("sensor.smart_scale_p1_korperpunktzahl","rating") %}{% if r %} · {{ {"low":"niedrig","normal":"normal","high":"hoch"}.get(r,r) }}{% endif %}
+    icon_color: '{{ {"low":"blue","normal":"green","high":"orange"}.get(state_attr("sensor.smart_scale_p1_korperpunktzahl","rating"),"teal") }}'
+    tap_action:
+      action: more-info
+- type: custom:apexcharts-card
+  graph_span: 90d
+  span:
+    end: day
+  header:
+    show: true
+    title: Gewicht (90 Tage)
+    show_states: true
+    colorize_states: true
+  apex_config:
+    legend:
+      show: false
+    chart:
+      height: 200
+  yaxis:
+  - decimals: 1
+    apex_config:
+      tickAmount: 4
+  series:
+  - entity: sensor.smart_scale_p1_gewicht
+    name: Gewicht
+    color: '#9C27B0'
+    stroke_width: 2
+    statistics: &id001
+      type: mean
+      period: day
+      align: middle
+    fill_raw: last
+  - entity: sensor.smart_scale_p1_zielgewicht
+    name: Zielgewicht
+    color: '#4CAF50'
+    stroke_width: 1
+    statistics: *id001
+    fill_raw: last
+- type: custom:apexcharts-card
+  graph_span: 90d
+  span:
+    end: day
+  header:
+    show: true
+    title: Fett, Muskel & Wasser in %
+    show_states: true
+    colorize_states: true
+  apex_config:
+    legend:
+      show: false
+    chart:
+      height: 200
+  yaxis:
+  - decimals: 0
+    apex_config:
+      tickAmount: 4
+  series:
+  - entity: sensor.smart_scale_p1_korperfett
+    name: Fett
+    color: '#FF9800'
+    stroke_width: 2
+    statistics: *id001
+    fill_raw: last
+  - entity: sensor.smart_scale_p1_muskelanteil
+    name: Muskel
+    color: '#E91E63'
+    stroke_width: 2
+    statistics: *id001
+    fill_raw: last
+  - entity: sensor.smart_scale_p1_korperwasser
+    name: Wasser
+    color: '#2196F3'
+    stroke_width: 2
+    statistics: *id001
+    fill_raw: last
+- type: custom:mushroom-title-card
+  subtitle: Fett
+- type: grid
+  columns: 2
+  square: false
+  cards:
+  - type: custom:mushroom-template-card
+    entity: sensor.smart_scale_p1_fettmasse
+    icon: mdi:scale-bathroom
+    primary: '{% set s=states("sensor.smart_scale_p1_fettmasse") %}{% if s in ["unknown","unavailable","none"] %}–{% else %}{{ "%.1f"|format(s|float) }} {{ state_attr("sensor.smart_scale_p1_fettmasse","unit_of_measurement") or "" }}{% endif %}'
+    secondary: Fettmasse{% set r=state_attr("sensor.smart_scale_p1_fettmasse","rating") %}{% if r %} · {{ {"low":"niedrig","normal":"normal","high":"hoch"}.get(r,r) }}{% endif %}
+    icon_color: '{{ {"low":"blue","normal":"green","high":"orange"}.get(state_attr("sensor.smart_scale_p1_fettmasse","rating"),"teal") }}'
+    tap_action:
+      action: more-info
+  - type: custom:mushroom-template-card
+    entity: sensor.smart_scale_p1_unterhautfett
+    icon: mdi:percent
+    primary: '{% set s=states("sensor.smart_scale_p1_unterhautfett") %}{% if s in ["unknown","unavailable","none"] %}–{% else %}{{ "%.1f"|format(s|float) }} {{ state_attr("sensor.smart_scale_p1_unterhautfett","unit_of_measurement") or "" }}{% endif %}'
+    secondary: Unterhautfett{% set r=state_attr("sensor.smart_scale_p1_unterhautfett","rating") %}{% if r %} · {{ {"low":"niedrig","normal":"normal","high":"hoch"}.get(r,r) }}{% endif %}
+    icon_color: '{{ {"low":"blue","normal":"green","high":"orange"}.get(state_attr("sensor.smart_scale_p1_unterhautfett","rating"),"teal") }}'
+    tap_action:
+      action: more-info
+  - type: custom:mushroom-template-card
+    entity: sensor.smart_scale_p1_unterhautfett_masse
+    icon: mdi:scale-bathroom
+    primary: '{% set s=states("sensor.smart_scale_p1_unterhautfett_masse") %}{% if s in ["unknown","unavailable","none"] %}–{% else %}{{ "%.1f"|format(s|float) }} {{ state_attr("sensor.smart_scale_p1_unterhautfett_masse","unit_of_measurement") or "" }}{% endif %}'
+    secondary: Unterhautfett{% set r=state_attr("sensor.smart_scale_p1_unterhautfett_masse","rating") %}{% if r %} · {{ {"low":"niedrig","normal":"normal","high":"hoch"}.get(r,r) }}{% endif %}
+    icon_color: '{{ {"low":"blue","normal":"green","high":"orange"}.get(state_attr("sensor.smart_scale_p1_unterhautfett_masse","rating"),"teal") }}'
+    tap_action:
+      action: more-info
+  - type: custom:mushroom-template-card
+    entity: sensor.smart_scale_p1_taille_huft_verhaltnis
+    icon: mdi:tape-measure
+    primary: '{% set s=states("sensor.smart_scale_p1_taille_huft_verhaltnis") %}{% if s in ["unknown","unavailable","none"] %}–{% else %}{{ "%.2f"|format(s|float) }} {{ state_attr("sensor.smart_scale_p1_taille_huft_verhaltnis","unit_of_measurement") or "" }}{% endif %}'
+    secondary: Taille/Hüfte{% set r=state_attr("sensor.smart_scale_p1_taille_huft_verhaltnis","rating") %}{% if r %} · {{ {"low":"niedrig","normal":"normal","high":"hoch"}.get(r,r) }}{% endif %}
+    icon_color: '{{ {"low":"blue","normal":"green","high":"orange"}.get(state_attr("sensor.smart_scale_p1_taille_huft_verhaltnis","rating"),"teal") }}'
+    tap_action:
+      action: more-info
+  - type: custom:mushroom-template-card
+    entity: sensor.smart_scale_p1_adipositasgrad
+    icon: mdi:scale-bathroom
+    primary: '{% set s=states("sensor.smart_scale_p1_adipositasgrad") %}{% if s in ["unknown","unavailable","none"] %}–{% else %}{{ "%.0f"|format(s|float) }} {{ state_attr("sensor.smart_scale_p1_adipositasgrad","unit_of_measurement") or "" }}{% endif %}'
+    secondary: Adipositasgrad{% set r=state_attr("sensor.smart_scale_p1_adipositasgrad","rating") %}{% if r %} · {{ {"low":"niedrig","normal":"normal","high":"hoch"}.get(r,r) }}{% endif %}
+    icon_color: '{{ {"low":"blue","normal":"green","high":"orange"}.get(state_attr("sensor.smart_scale_p1_adipositasgrad","rating"),"teal") }}'
+    tap_action:
+      action: more-info
+- type: custom:mushroom-title-card
+  subtitle: Muskeln & Masse
+- type: grid
+  columns: 2
+  square: false
+  cards:
+  - type: custom:mushroom-template-card
+    entity: sensor.smart_scale_p1_muskelanteil
+    icon: mdi:arm-flex
+    primary: '{% set s=states("sensor.smart_scale_p1_muskelanteil") %}{% if s in ["unknown","unavailable","none"] %}–{% else %}{{ "%.1f"|format(s|float) }} {{ state_attr("sensor.smart_scale_p1_muskelanteil","unit_of_measurement") or "" }}{% endif %}'
+    secondary: Muskelanteil{% set r=state_attr("sensor.smart_scale_p1_muskelanteil","rating") %}{% if r %} · {{ {"low":"niedrig","normal":"normal","high":"hoch"}.get(r,r) }}{% endif %}
+    icon_color: '{{ {"low":"blue","normal":"green","high":"orange"}.get(state_attr("sensor.smart_scale_p1_muskelanteil","rating"),"teal") }}'
+    tap_action:
+      action: more-info
+  - type: custom:mushroom-template-card
+    entity: sensor.smart_scale_p1_skelettmuskelmasse
+    icon: mdi:arm-flex
+    primary: '{% set s=states("sensor.smart_scale_p1_skelettmuskelmasse") %}{% if s in ["unknown","unavailable","none"] %}–{% else %}{{ "%.1f"|format(s|float) }} {{ state_attr("sensor.smart_scale_p1_skelettmuskelmasse","unit_of_measurement") or "" }}{% endif %}'
+    secondary: Skelettmuskeln{% set r=state_attr("sensor.smart_scale_p1_skelettmuskelmasse","rating") %}{% if r %} · {{ {"low":"niedrig","normal":"normal","high":"hoch"}.get(r,r) }}{% endif %}
+    icon_color: '{{ {"low":"blue","normal":"green","high":"orange"}.get(state_attr("sensor.smart_scale_p1_skelettmuskelmasse","rating"),"teal") }}'
+    tap_action:
+      action: more-info
+  - type: custom:mushroom-template-card
+    entity: sensor.smart_scale_p1_skelettmuskelanteil
+    icon: mdi:arm-flex
+    primary: '{% set s=states("sensor.smart_scale_p1_skelettmuskelanteil") %}{% if s in ["unknown","unavailable","none"] %}–{% else %}{{ "%.1f"|format(s|float) }} {{ state_attr("sensor.smart_scale_p1_skelettmuskelanteil","unit_of_measurement") or "" }}{% endif %}'
+    secondary: Skelettmuskelanteil{% set r=state_attr("sensor.smart_scale_p1_skelettmuskelanteil","rating") %}{% if r %} · {{ {"low":"niedrig","normal":"normal","high":"hoch"}.get(r,r) }}{% endif %}
+    icon_color: '{{ {"low":"blue","normal":"green","high":"orange"}.get(state_attr("sensor.smart_scale_p1_skelettmuskelanteil","rating"),"teal") }}'
+    tap_action:
+      action: more-info
+  - type: custom:mushroom-template-card
+    entity: sensor.smart_scale_p1_skelettmuskelindex
+    icon: mdi:arm-flex
+    primary: '{% set s=states("sensor.smart_scale_p1_skelettmuskelindex") %}{% if s in ["unknown","unavailable","none"] %}–{% else %}{{ "%.1f"|format(s|float) }} {{ state_attr("sensor.smart_scale_p1_skelettmuskelindex","unit_of_measurement") or "" }}{% endif %}'
+    secondary: Skelettmuskelindex{% set r=state_attr("sensor.smart_scale_p1_skelettmuskelindex","rating") %}{% if r %} · {{ {"low":"niedrig","normal":"normal","high":"hoch"}.get(r,r) }}{% endif %}
+    icon_color: '{{ {"low":"blue","normal":"green","high":"orange"}.get(state_attr("sensor.smart_scale_p1_skelettmuskelindex","rating"),"teal") }}'
+    tap_action:
+      action: more-info
+  - type: custom:mushroom-template-card
+    entity: sensor.smart_scale_p1_fettfreie_masse
+    icon: mdi:human
+    primary: '{% set s=states("sensor.smart_scale_p1_fettfreie_masse") %}{% if s in ["unknown","unavailable","none"] %}–{% else %}{{ "%.1f"|format(s|float) }} {{ state_attr("sensor.smart_scale_p1_fettfreie_masse","unit_of_measurement") or "" }}{% endif %}'
+    secondary: Fettfreie Masse{% set r=state_attr("sensor.smart_scale_p1_fettfreie_masse","rating") %}{% if r %} · {{ {"low":"niedrig","normal":"normal","high":"hoch"}.get(r,r) }}{% endif %}
+    icon_color: '{{ {"low":"blue","normal":"green","high":"orange"}.get(state_attr("sensor.smart_scale_p1_fettfreie_masse","rating"),"teal") }}'
+    tap_action:
+      action: more-info
+  - type: custom:mushroom-template-card
+    entity: sensor.smart_scale_p1_korperzellmasse
+    icon: mdi:dots-hexagon
+    primary: '{% set s=states("sensor.smart_scale_p1_korperzellmasse") %}{% if s in ["unknown","unavailable","none"] %}–{% else %}{{ "%.1f"|format(s|float) }} {{ state_attr("sensor.smart_scale_p1_korperzellmasse","unit_of_measurement") or "" }}{% endif %}'
+    secondary: Körperzellmasse{% set r=state_attr("sensor.smart_scale_p1_korperzellmasse","rating") %}{% if r %} · {{ {"low":"niedrig","normal":"normal","high":"hoch"}.get(r,r) }}{% endif %}
+    icon_color: '{{ {"low":"blue","normal":"green","high":"orange"}.get(state_attr("sensor.smart_scale_p1_korperzellmasse","rating"),"teal") }}'
+    tap_action:
+      action: more-info
+- type: custom:mushroom-title-card
+  subtitle: Wasser, Protein & Mineralien
+- type: grid
+  columns: 2
+  square: false
+  cards:
+  - type: custom:mushroom-template-card
+    entity: sensor.smart_scale_p1_korperwasser
+    icon: mdi:water-percent
+    primary: '{% set s=states("sensor.smart_scale_p1_korperwasser") %}{% if s in ["unknown","unavailable","none"] %}–{% else %}{{ "%.1f"|format(s|float) }} {{ state_attr("sensor.smart_scale_p1_korperwasser","unit_of_measurement") or "" }}{% endif %}'
+    secondary: Körperwasser{% set r=state_attr("sensor.smart_scale_p1_korperwasser","rating") %}{% if r %} · {{ {"low":"niedrig","normal":"normal","high":"hoch"}.get(r,r) }}{% endif %}
+    icon_color: '{{ {"low":"blue","normal":"green","high":"orange"}.get(state_attr("sensor.smart_scale_p1_korperwasser","rating"),"teal") }}'
+    tap_action:
+      action: more-info
+  - type: custom:mushroom-template-card
+    entity: sensor.smart_scale_p1_korperwasser_masse
+    icon: mdi:water
+    primary: '{% set s=states("sensor.smart_scale_p1_korperwasser_masse") %}{% if s in ["unknown","unavailable","none"] %}–{% else %}{{ "%.1f"|format(s|float) }} {{ state_attr("sensor.smart_scale_p1_korperwasser_masse","unit_of_measurement") or "" }}{% endif %}'
+    secondary: Körperwasser{% set r=state_attr("sensor.smart_scale_p1_korperwasser_masse","rating") %}{% if r %} · {{ {"low":"niedrig","normal":"normal","high":"hoch"}.get(r,r) }}{% endif %}
+    icon_color: '{{ {"low":"blue","normal":"green","high":"orange"}.get(state_attr("sensor.smart_scale_p1_korperwasser_masse","rating"),"teal") }}'
+    tap_action:
+      action: more-info
+  - type: custom:mushroom-template-card
+    entity: sensor.smart_scale_p1_intrazellulares_wasser
+    icon: mdi:water
+    primary: '{% set s=states("sensor.smart_scale_p1_intrazellulares_wasser") %}{% if s in ["unknown","unavailable","none"] %}–{% else %}{{ "%.1f"|format(s|float) }} {{ state_attr("sensor.smart_scale_p1_intrazellulares_wasser","unit_of_measurement") or "" }}{% endif %}'
+    secondary: Intrazellulär{% set r=state_attr("sensor.smart_scale_p1_intrazellulares_wasser","rating") %}{% if r %} · {{ {"low":"niedrig","normal":"normal","high":"hoch"}.get(r,r) }}{% endif %}
+    icon_color: '{{ {"low":"blue","normal":"green","high":"orange"}.get(state_attr("sensor.smart_scale_p1_intrazellulares_wasser","rating"),"teal") }}'
+    tap_action:
+      action: more-info
+  - type: custom:mushroom-template-card
+    entity: sensor.smart_scale_p1_extrazellulares_wasser
+    icon: mdi:water-outline
+    primary: '{% set s=states("sensor.smart_scale_p1_extrazellulares_wasser") %}{% if s in ["unknown","unavailable","none"] %}–{% else %}{{ "%.1f"|format(s|float) }} {{ state_attr("sensor.smart_scale_p1_extrazellulares_wasser","unit_of_measurement") or "" }}{% endif %}'
+    secondary: Extrazellulär{% set r=state_attr("sensor.smart_scale_p1_extrazellulares_wasser","rating") %}{% if r %} · {{ {"low":"niedrig","normal":"normal","high":"hoch"}.get(r,r) }}{% endif %}
+    icon_color: '{{ {"low":"blue","normal":"green","high":"orange"}.get(state_attr("sensor.smart_scale_p1_extrazellulares_wasser","rating"),"teal") }}'
+    tap_action:
+      action: more-info
+  - type: custom:mushroom-template-card
+    entity: sensor.smart_scale_p1_protein
+    icon: mdi:molecule
+    primary: '{% set s=states("sensor.smart_scale_p1_protein") %}{% if s in ["unknown","unavailable","none"] %}–{% else %}{{ "%.1f"|format(s|float) }} {{ state_attr("sensor.smart_scale_p1_protein","unit_of_measurement") or "" }}{% endif %}'
+    secondary: Protein{% set r=state_attr("sensor.smart_scale_p1_protein","rating") %}{% if r %} · {{ {"low":"niedrig","normal":"normal","high":"hoch"}.get(r,r) }}{% endif %}
+    icon_color: '{{ {"low":"blue","normal":"green","high":"orange"}.get(state_attr("sensor.smart_scale_p1_protein","rating"),"teal") }}'
+    tap_action:
+      action: more-info
+  - type: custom:mushroom-template-card
+    entity: sensor.smart_scale_p1_protein_masse
+    icon: mdi:molecule
+    primary: '{% set s=states("sensor.smart_scale_p1_protein_masse") %}{% if s in ["unknown","unavailable","none"] %}–{% else %}{{ "%.1f"|format(s|float) }} {{ state_attr("sensor.smart_scale_p1_protein_masse","unit_of_measurement") or "" }}{% endif %}'
+    secondary: Protein{% set r=state_attr("sensor.smart_scale_p1_protein_masse","rating") %}{% if r %} · {{ {"low":"niedrig","normal":"normal","high":"hoch"}.get(r,r) }}{% endif %}
+    icon_color: '{{ {"low":"blue","normal":"green","high":"orange"}.get(state_attr("sensor.smart_scale_p1_protein_masse","rating"),"teal") }}'
+    tap_action:
+      action: more-info
+  - type: custom:mushroom-template-card
+    entity: sensor.smart_scale_p1_mineralien
+    icon: mdi:diamond-stone
+    primary: '{% set s=states("sensor.smart_scale_p1_mineralien") %}{% if s in ["unknown","unavailable","none"] %}–{% else %}{{ "%.1f"|format(s|float) }} {{ state_attr("sensor.smart_scale_p1_mineralien","unit_of_measurement") or "" }}{% endif %}'
+    secondary: Mineralien{% set r=state_attr("sensor.smart_scale_p1_mineralien","rating") %}{% if r %} · {{ {"low":"niedrig","normal":"normal","high":"hoch"}.get(r,r) }}{% endif %}
+    icon_color: '{{ {"low":"blue","normal":"green","high":"orange"}.get(state_attr("sensor.smart_scale_p1_mineralien","rating"),"teal") }}'
+    tap_action:
+      action: more-info
+  - type: custom:mushroom-template-card
+    entity: sensor.smart_scale_p1_knochenmasse
+    icon: mdi:bone
+    primary: '{% set s=states("sensor.smart_scale_p1_knochenmasse") %}{% if s in ["unknown","unavailable","none"] %}–{% else %}{{ "%.1f"|format(s|float) }} {{ state_attr("sensor.smart_scale_p1_knochenmasse","unit_of_measurement") or "" }}{% endif %}'
+    secondary: Knochenmasse{% set r=state_attr("sensor.smart_scale_p1_knochenmasse","rating") %}{% if r %} · {{ {"low":"niedrig","normal":"normal","high":"hoch"}.get(r,r) }}{% endif %}
+    icon_color: '{{ {"low":"blue","normal":"green","high":"orange"}.get(state_attr("sensor.smart_scale_p1_knochenmasse","rating"),"teal") }}'
+    tap_action:
+      action: more-info
+- type: custom:mushroom-title-card
+  subtitle: Stoffwechsel & Bewertung
+- type: grid
+  columns: 2
+  square: false
+  cards:
+  - type: custom:mushroom-template-card
+    entity: sensor.smart_scale_p1_grundumsatz
+    icon: mdi:fire
+    primary: '{% set s=states("sensor.smart_scale_p1_grundumsatz") %}{% if s in ["unknown","unavailable","none"] %}–{% else %}{{ "%.0f"|format(s|float) }} {{ state_attr("sensor.smart_scale_p1_grundumsatz","unit_of_measurement") or "" }}{% endif %}'
+    secondary: Grundumsatz{% set r=state_attr("sensor.smart_scale_p1_grundumsatz","rating") %}{% if r %} · {{ {"low":"niedrig","normal":"normal","high":"hoch"}.get(r,r) }}{% endif %}
+    icon_color: '{{ {"low":"blue","normal":"green","high":"orange"}.get(state_attr("sensor.smart_scale_p1_grundumsatz","rating"),"teal") }}'
+    tap_action:
+      action: more-info
+  - type: custom:mushroom-template-card
+    entity: sensor.smart_scale_p1_empfohlene_kalorienzufuhr
+    icon: mdi:food-apple
+    primary: '{% set s=states("sensor.smart_scale_p1_empfohlene_kalorienzufuhr") %}{% if s in ["unknown","unavailable","none"] %}–{% else %}{{ "%.0f"|format(s|float) }} {{ state_attr("sensor.smart_scale_p1_empfohlene_kalorienzufuhr","unit_of_measurement") or "" }}{% endif %}'
+    secondary: Kalorienbedarf{% set r=state_attr("sensor.smart_scale_p1_empfohlene_kalorienzufuhr","rating") %}{% if r %} · {{ {"low":"niedrig","normal":"normal","high":"hoch"}.get(r,r) }}{% endif %}
+    icon_color: '{{ {"low":"blue","normal":"green","high":"orange"}.get(state_attr("sensor.smart_scale_p1_empfohlene_kalorienzufuhr","rating"),"teal") }}'
+    tap_action:
+      action: more-info
+  - type: custom:mushroom-template-card
+    entity: sensor.smart_scale_p1_korperalter
+    icon: mdi:account-clock
+    primary: '{% set s=states("sensor.smart_scale_p1_korperalter") %}{% if s in ["unknown","unavailable","none"] %}–{% else %}{{ "%.0f"|format(s|float) }} {{ state_attr("sensor.smart_scale_p1_korperalter","unit_of_measurement") or "" }}{% endif %}'
+    secondary: Körperalter{% set r=state_attr("sensor.smart_scale_p1_korperalter","rating") %}{% if r %} · {{ {"low":"niedrig","normal":"normal","high":"hoch"}.get(r,r) }}{% endif %}
+    icon_color: '{{ {"low":"blue","normal":"green","high":"orange"}.get(state_attr("sensor.smart_scale_p1_korperalter","rating"),"teal") }}'
+    tap_action:
+      action: more-info
+  - type: custom:mushroom-template-card
+    entity: sensor.smart_scale_p1_herzfrequenz
+    icon: mdi:heart-pulse
+    primary: '{% set s=states("sensor.smart_scale_p1_herzfrequenz") %}{% if s in ["unknown","unavailable","none"] %}–{% else %}{{ "%.0f"|format(s|float) }} {{ state_attr("sensor.smart_scale_p1_herzfrequenz","unit_of_measurement") or "" }}{% endif %}'
+    secondary: Herzfrequenz{% set r=state_attr("sensor.smart_scale_p1_herzfrequenz","rating") %}{% if r %} · {{ {"low":"niedrig","normal":"normal","high":"hoch"}.get(r,r) }}{% endif %}
+    icon_color: '{{ {"low":"blue","normal":"green","high":"orange"}.get(state_attr("sensor.smart_scale_p1_herzfrequenz","rating"),"teal") }}'
+    tap_action:
+      action: more-info
+  - type: custom:mushroom-entity-card
+    entity: sensor.smart_scale_p1_korpertyp
+    name: Körpertyp
+    icon_color: teal
+    tap_action:
+      action: more-info
+- type: custom:mushroom-title-card
+  subtitle: Ziele
+- type: grid
+  columns: 2
+  square: false
+  cards:
+  - type: custom:mushroom-template-card
+    entity: sensor.smart_scale_p1_zielgewicht
+    icon: mdi:target
+    primary: '{% set s=states("sensor.smart_scale_p1_zielgewicht") %}{% if s in ["unknown","unavailable","none"] %}–{% else %}{{ "%.1f"|format(s|float) }} {{ state_attr("sensor.smart_scale_p1_zielgewicht","unit_of_measurement") or "" }}{% endif %}'
+    secondary: Zielgewicht{% set r=state_attr("sensor.smart_scale_p1_zielgewicht","rating") %}{% if r %} · {{ {"low":"niedrig","normal":"normal","high":"hoch"}.get(r,r) }}{% endif %}
+    icon_color: '{{ {"low":"blue","normal":"green","high":"orange"}.get(state_attr("sensor.smart_scale_p1_zielgewicht","rating"),"teal") }}'
+    tap_action:
+      action: more-info
+  - type: custom:mushroom-template-card
+    entity: sensor.smart_scale_p1_idealgewicht
+    icon: mdi:target
+    primary: '{% set s=states("sensor.smart_scale_p1_idealgewicht") %}{% if s in ["unknown","unavailable","none"] %}–{% else %}{{ "%.1f"|format(s|float) }} {{ state_attr("sensor.smart_scale_p1_idealgewicht","unit_of_measurement") or "" }}{% endif %}'
+    secondary: Idealgewicht{% set r=state_attr("sensor.smart_scale_p1_idealgewicht","rating") %}{% if r %} · {{ {"low":"niedrig","normal":"normal","high":"hoch"}.get(r,r) }}{% endif %}
+    icon_color: '{{ {"low":"blue","normal":"green","high":"orange"}.get(state_attr("sensor.smart_scale_p1_idealgewicht","rating"),"teal") }}'
+    tap_action:
+      action: more-info
+  - type: custom:mushroom-template-card
+    entity: sensor.smart_scale_p1_gewichtskontrolle
+    icon: mdi:plus-minus
+    primary: '{% set s=states("sensor.smart_scale_p1_gewichtskontrolle") %}{% if s in ["unknown","unavailable","none"] %}–{% else %}{% set v=s|float %}{{ ("+" if v>0 else "") ~ ("%.1f"|format(v)) }} kg{% endif %}'
+    secondary: Gewicht anpassen{% set r=state_attr("sensor.smart_scale_p1_gewichtskontrolle","rating") %}{% if r %} · {{ {"low":"niedrig","normal":"normal","high":"hoch"}.get(r,r) }}{% endif %}
+    icon_color: '{% set s=states("sensor.smart_scale_p1_gewichtskontrolle") %}{{ "green" if s in ["0","0.0"] else "amber" }}'
+    tap_action:
+      action: more-info
+  - type: custom:mushroom-template-card
+    entity: sensor.smart_scale_p1_fettkontrolle
+    icon: mdi:plus-minus
+    primary: '{% set s=states("sensor.smart_scale_p1_fettkontrolle") %}{% if s in ["unknown","unavailable","none"] %}–{% else %}{% set v=s|float %}{{ ("+" if v>0 else "") ~ ("%.1f"|format(v)) }} kg{% endif %}'
+    secondary: Fett anpassen{% set r=state_attr("sensor.smart_scale_p1_fettkontrolle","rating") %}{% if r %} · {{ {"low":"niedrig","normal":"normal","high":"hoch"}.get(r,r) }}{% endif %}
+    icon_color: '{% set s=states("sensor.smart_scale_p1_fettkontrolle") %}{{ "green" if s in ["0","0.0"] else "amber" }}'
+    tap_action:
+      action: more-info
+  - type: custom:mushroom-template-card
+    entity: sensor.smart_scale_p1_muskelkontrolle
+    icon: mdi:plus-minus
+    primary: '{% set s=states("sensor.smart_scale_p1_muskelkontrolle") %}{% if s in ["unknown","unavailable","none"] %}–{% else %}{% set v=s|float %}{{ ("+" if v>0 else "") ~ ("%.1f"|format(v)) }} kg{% endif %}'
+    secondary: Muskel anpassen{% set r=state_attr("sensor.smart_scale_p1_muskelkontrolle","rating") %}{% if r %} · {{ {"low":"niedrig","normal":"normal","high":"hoch"}.get(r,r) }}{% endif %}
+    icon_color: '{% set s=states("sensor.smart_scale_p1_muskelkontrolle") %}{{ "green" if s in ["0","0.0"] else "amber" }}'
+    tap_action:
+      action: more-info
+- type: custom:mushroom-title-card
+  subtitle: Segmente (Muskel · Fett)
+- type: grid
+  columns: 1
+  square: false
+  cards:
+  - type: custom:mushroom-template-card
+    entity: sensor.smart_scale_p1_muskelmasse_rechter_arm
+    icon: mdi:human
+    primary: Rechter Arm
+    secondary: Muskel {% set s=states("sensor.smart_scale_p1_muskelmasse_rechter_arm") %}{{ "–" if s in ["unknown","unavailable"] else "%.1f"|format(s|float) ~ " kg" }} ({{ {"low":"niedrig","normal":"normal","high":"hoch"}.get(state_attr("sensor.smart_scale_p1_muskelmasse_rechter_arm","rating"),"–") }}) · Fett {% set s=states("sensor.smart_scale_p1_fettmasse_rechter_arm") %}{{ "–" if s in ["unknown","unavailable"] else "%.1f"|format(s|float) ~ " kg" }} ({{ {"low":"niedrig","normal":"normal","high":"hoch"}.get(state_attr("sensor.smart_scale_p1_fettmasse_rechter_arm","rating"),"–") }})
+    icon_color: '{{ {"low":"blue","normal":"green","high":"orange"}.get(state_attr("sensor.smart_scale_p1_muskelmasse_rechter_arm","rating"),"teal") }}'
+    tap_action:
+      action: more-info
+    hold_action:
+      action: more-info
+      entity: sensor.smart_scale_p1_fettmasse_rechter_arm
+  - type: custom:mushroom-template-card
+    entity: sensor.smart_scale_p1_muskelmasse_linker_arm
+    icon: mdi:human
+    primary: Linker Arm
+    secondary: Muskel {% set s=states("sensor.smart_scale_p1_muskelmasse_linker_arm") %}{{ "–" if s in ["unknown","unavailable"] else "%.1f"|format(s|float) ~ " kg" }} ({{ {"low":"niedrig","normal":"normal","high":"hoch"}.get(state_attr("sensor.smart_scale_p1_muskelmasse_linker_arm","rating"),"–") }}) · Fett {% set s=states("sensor.smart_scale_p1_fettmasse_linker_arm") %}{{ "–" if s in ["unknown","unavailable"] else "%.1f"|format(s|float) ~ " kg" }} ({{ {"low":"niedrig","normal":"normal","high":"hoch"}.get(state_attr("sensor.smart_scale_p1_fettmasse_linker_arm","rating"),"–") }})
+    icon_color: '{{ {"low":"blue","normal":"green","high":"orange"}.get(state_attr("sensor.smart_scale_p1_muskelmasse_linker_arm","rating"),"teal") }}'
+    tap_action:
+      action: more-info
+    hold_action:
+      action: more-info
+      entity: sensor.smart_scale_p1_fettmasse_linker_arm
+  - type: custom:mushroom-template-card
+    entity: sensor.smart_scale_p1_muskelmasse_rumpf
+    icon: mdi:human
+    primary: Rumpf
+    secondary: Muskel {% set s=states("sensor.smart_scale_p1_muskelmasse_rumpf") %}{{ "–" if s in ["unknown","unavailable"] else "%.1f"|format(s|float) ~ " kg" }} ({{ {"low":"niedrig","normal":"normal","high":"hoch"}.get(state_attr("sensor.smart_scale_p1_muskelmasse_rumpf","rating"),"–") }}) · Fett {% set s=states("sensor.smart_scale_p1_fettmasse_rumpf") %}{{ "–" if s in ["unknown","unavailable"] else "%.1f"|format(s|float) ~ " kg" }} ({{ {"low":"niedrig","normal":"normal","high":"hoch"}.get(state_attr("sensor.smart_scale_p1_fettmasse_rumpf","rating"),"–") }})
+    icon_color: '{{ {"low":"blue","normal":"green","high":"orange"}.get(state_attr("sensor.smart_scale_p1_muskelmasse_rumpf","rating"),"teal") }}'
+    tap_action:
+      action: more-info
+    hold_action:
+      action: more-info
+      entity: sensor.smart_scale_p1_fettmasse_rumpf
+  - type: custom:mushroom-template-card
+    entity: sensor.smart_scale_p1_muskelmasse_rechtes_bein
+    icon: mdi:human
+    primary: Rechtes Bein
+    secondary: Muskel {% set s=states("sensor.smart_scale_p1_muskelmasse_rechtes_bein") %}{{ "–" if s in ["unknown","unavailable"] else "%.1f"|format(s|float) ~ " kg" }} ({{ {"low":"niedrig","normal":"normal","high":"hoch"}.get(state_attr("sensor.smart_scale_p1_muskelmasse_rechtes_bein","rating"),"–") }}) · Fett {% set s=states("sensor.smart_scale_p1_fettmasse_rechtes_bein") %}{{ "–" if s in ["unknown","unavailable"] else "%.1f"|format(s|float) ~ " kg" }} ({{ {"low":"niedrig","normal":"normal","high":"hoch"}.get(state_attr("sensor.smart_scale_p1_fettmasse_rechtes_bein","rating"),"–") }})
+    icon_color: '{{ {"low":"blue","normal":"green","high":"orange"}.get(state_attr("sensor.smart_scale_p1_muskelmasse_rechtes_bein","rating"),"teal") }}'
+    tap_action:
+      action: more-info
+    hold_action:
+      action: more-info
+      entity: sensor.smart_scale_p1_fettmasse_rechtes_bein
+  - type: custom:mushroom-template-card
+    entity: sensor.smart_scale_p1_muskelmasse_linkes_bein
+    icon: mdi:human
+    primary: Linkes Bein
+    secondary: Muskel {% set s=states("sensor.smart_scale_p1_muskelmasse_linkes_bein") %}{{ "–" if s in ["unknown","unavailable"] else "%.1f"|format(s|float) ~ " kg" }} ({{ {"low":"niedrig","normal":"normal","high":"hoch"}.get(state_attr("sensor.smart_scale_p1_muskelmasse_linkes_bein","rating"),"–") }}) · Fett {% set s=states("sensor.smart_scale_p1_fettmasse_linkes_bein") %}{{ "–" if s in ["unknown","unavailable"] else "%.1f"|format(s|float) ~ " kg" }} ({{ {"low":"niedrig","normal":"normal","high":"hoch"}.get(state_attr("sensor.smart_scale_p1_fettmasse_linkes_bein","rating"),"–") }})
+    icon_color: '{{ {"low":"blue","normal":"green","high":"orange"}.get(state_attr("sensor.smart_scale_p1_muskelmasse_linkes_bein","rating"),"teal") }}'
+    tap_action:
+      action: more-info
+    hold_action:
+      action: more-info
+      entity: sensor.smart_scale_p1_fettmasse_linkes_bein
