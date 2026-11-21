@@ -1,44 +1,102 @@
 # Protokoll-Notizen
 
-Stand: 2026-11-21
+Stand: 2026-11-21 · Gerät: PAVABA 8-Elektroden-Waage mit Griff, Bluetooth-Name **`smart scale P1`**
 
-## Herkunft der Waage
+Quellen: statische Analyse der App „Unique Health“ (iOS, `PPBluetoothKit.framework`) mit REA sowie Mitschnitte der Waage über Home Assistant. Beispiel-Frames in diesem Dokument sind synthetisch (MAC und Gewicht ersetzt).
 
-- App „Unique Health“, Entwickler **Shenzhen Lefu Scale Co., Ltd.**; auf dem Mac installiert als `XMProject.app` (iOS-App, arm64)
-- Die App bindet Lefus SDK ein: `PPBluetoothKit.framework`, `PPBaseKit.framework`, `PPBasicCalculateKit.bundle`
-- Lefu-Waagen senden Herstellerdaten mit **Bluetooth Company ID `0x1A10`**
+| Kennzeichnung | Bedeutung |
+| --- | --- |
+| ✅ bestätigt | an der echten Waage beobachtet |
+| 🔎 aus der App | aus dem App-Code abgeleitet, an der Waage noch nicht gesehen |
 
-## Erkenntnisse aus der App (REA, statisch)
+## Einordnung
 
-- Bluetooth: Die App sucht den GATT-Dienst **`FFF0`** (`discoverFFF0Service`)
-- SDK-Klassen/Delegates: `PPBluetoothAdvDeviceModel`, `PPBluetoothScaleBaseModel`, `PPBluetooth180ADeviceModel`, `PPBluetoothScaleDataDelegate`, `PPBluetoothCMDDataDelegate`, **`PPBluetoothCalculateInScaleDataDelegate`** (liefert ein `PPBodyFatModel`)
-  → Hinweis, dass dieses Modell die Körperanalyse **auf der Waage selbst** rechnet und fertige Werte überträgt. Zu prüfen.
-- Ressourcen in der App: `BodyParam.json`, `BodyParam_HT_8.json`, `scale_8.json` (vermutlich Kennzahl-Definitionen/Grenzwerte für 8-Elektroden-Modelle)
-- Algorithmus-Kennung im Binary: `LF_4_Z_Lefu_2023-05-15_V1.0.0`
-- Cloud: `uhde.lefuenergy.com` (EU/DE-Region), `uhus.lefuenergy.com`, `unique.lefuenergy.com` – möglicher Fallback
+- Hersteller der App und der Technik: **Shenzhen Lefu Scale Co., Ltd.**; die App bindet Lefus SDK ein (`PPBluetoothKit`, `PPBaseKit`, `PPBasicCalculateKit`).
+- Das SDK ordnet Geräte über den Bluetooth-Namen einer Gerätefamilie zu. Die Frames dieser Waage passen zur Familie **„Ice“** (`PPBluetoothPeripheralIce`, `PPBluetoothIceDataAnalysis`; im Code auch als CF597 bezeichnet). 🔎
+- Die Zuordnung Name → Familie liegt in einer Gerätekonfiguration, die die App vom Server lädt. Sie wurde nicht ausgelesen; die Einordnung beruht auf dem Frame-Format.
 
-## Wie Lefus SDK ein Gerät einordnet (REA, `PPBluetoothKit` iOS)
+## Advertising ✅
 
-- `+[PPBluetoothAdvDeviceModel filterDeviceTypeAdvModelByCBAdvDataManufacturerData:andDeivceName:RSSI:]` gleicht den **Bluetooth-Namen** gegen eine Gerätekonfigurationsliste ab (erst exakt, dann unscharf per `CONTAINS`). Je nach Protokoll kommen Länge der Herstellerdaten (`advLength`), MAC-Position (`macAddressStart`) und eine Signatur (`sign`) dazu.
-  → Die Herstellerdaten stehen **nicht zwingend** unter Company ID `0x1A10`. Die Integration zeichnet deshalb alle Hersteller- und Service-Daten auf und bietet im Einrichtungsdialog alle sichtbaren Geräte an.
-- Aus der Konfiguration ergeben sich `deviceConnectType`, `deviceProtocolType`, `deviceType`, `deviceCalcuteType`. `-[PPBluetoothAdvDeviceModel PeripheralType]` bildet das auf eine Gerätefamilie ab (Codenamen im SDK: Apple, Banana, Coconut, Durian, Egg, Fish, Grapes, Hamburger, Ice, Jambul, Torre, Borre, Dorre, Forre, Korre, Lorre, Morre). Jede Familie hat eigene Klassen `PPBluetoothPeripheral<Familie>`, `PPBluetoothCMD<Familie>` und `PPBluetooth<Familie>DataAnalysis`.
-- **Entscheidend ist also der Bluetooth-Name der Waage.** Erst damit steht fest, welche Familie (und damit welches Frame-Format) gilt.
+- Name `smart scale P1`, Dienste `FFF0` und `1812`
+- Herstellerdaten unter Company ID **`0xFFFF`** (nicht Lefus `0x1A10`), 17 Bytes:
 
-## Öffentliche Quellen von Lefu
+```
+aa bb cc dd ee ff | cf 00 00 4c 1d 00 00 00 00 08 96
+└── MAC (6) ─────┘ └── CF-Frame (11) ──────────────┘
+```
 
-- SDK-Demos und Doku: [LefuHengqi/BluetoothKit-iOSDemo](https://github.com/LefuHengqi/BluetoothKit-iOSDemo), [LefuHengqi/BluetoothKit-AndroidDemo](https://github.com/LefuHengqi/BluetoothKit-AndroidDemo) (enthält eine Architekturübersicht des SDK), [LefuHengqi/PPCalculateKit](https://github.com/LefuHengqi/PPCalculateKit)
-- Android-SDK als AAR (teils obfuskiert): [LefuHengqi/PPBaseKit-Android](https://github.com/LefuHengqi/PPBaseKit-Android) – `ppbluetoothkit`, `ppcalculatekit` (mit `BodyParam_HT_8.json`), `ppbasekit`
-- Berechnung laut SDK-Übersicht: `CalculateManager` verzweigt nach `deviceCalcuteType`, u. a. `CalculateHelper8` für 8 Elektroden
+- Im Ruhezustand sind die 11 Frame-Bytes null.
 
-## Verwandte Projekte
+## CF-Frame (11 Bytes): Gewicht und Status
 
-- [cloudbr34k84/ha-renpho-cloud-ble](https://github.com/cloudbr34k84/ha-renpho-cloud-ble) – dekodiert Lefu-Waagen (`0x1A10`, Familien „0x55aa“ und „MorphoScan“) lokal
-- [KristianP26/ble-scale-sync](https://github.com/KristianP26/ble-scale-sync)
-- [oliexdev/openScale](https://github.com/oliexdev/openScale)
+| Byte | Inhalt | Status |
+| --- | --- | --- |
+| 0 | `0xCF` | ✅ |
+| 1 | Herzfrequenz, gültig wenn Byte 2 = `0xC0` | 🔎 |
+| 2 | `0x80` = Herzfrequenz wird gemessen, `0xC0` = Herzfrequenz liegt vor | 🔎 |
+| 3–4 | Gewicht, Little Endian, Einheit 0,01 kg | ✅ |
+| 5–7 | bei dieser Familie ungenutzt (andere Familien: Impedanz) | ✅ immer 0 |
+| 8 | Anzeigeeinheit der Waage | 🔎 |
+| 9 | Status, siehe unten | ✅ 1 und 8 |
+| 10 | Prüfsumme: XOR der Bytes 0–9 | ✅ |
+
+Status (Byte 9):
+
+| Wert | Bedeutung |
+| --- | --- |
+| 0 | Messung abgeschlossen 🔎 |
+| 1 | Gewicht schwankt noch ✅ |
+| 2 | Überlast 🔎 |
+| 5, 8 | Gewicht steht fest, Körperanalyse beginnt (✅ 8) |
+| 6 | Körperanalyse läuft 🔎 |
+
+## Verbindung (GATT) 🔎
+
+- Dienst `FFF0`; Notifications auf `FFF1`, `FFF2` und `FFF4`
+- **`FFF4`** liefert die Messdaten: Frames mit `cf`, `bf` oder `df` am Anfang
+- Schreiben über `FFF1`/`FFF2` (Zeit setzen, Einheit, WLAN, Körperfett zurückschreiben); Keep-alive ist der Befehl `1000`
+- Optional gibt es eine Authentifizierung (Befehle `C0`–`C3`, AES). Ob diese Waage sie verlangt, bestimmt das Flag `needAuth` der Gerätekonfiguration – offen.
+- Die App schreibt nach der Berechnung Werte auf die Waage zurück (`cmdWirteBodyFat`). Die Körperwerte entstehen also **in der App**, nicht auf der Waage.
+
+## BF-Frame (23 Bytes): Impedanzen einer Frequenz 🔎
+
+| Byte | Inhalt |
+| --- | --- |
+| 0 | `0xBF` |
+| 1 | Bit 5 gesetzt = Werte zurücksetzen; unteres Nibble: 0 = 20 kHz, 1 = 100 kHz |
+| 2–5 | rechter Arm (int32 LE) |
+| 6–9 | linker Arm |
+| 10–13 | Rumpf |
+| 14–17 | rechtes Bein |
+| 18–21 | linkes Bein |
+| 22 | vermutlich Prüfsumme |
+
+## DF-Frame (17 Bytes): Impedanzen in Teilpaketen 🔎
+
+| Byte | Inhalt |
+| --- | --- |
+| 0 | `0xDF` |
+| 1 | `0xFF` = zurücksetzen |
+| 2 | Teil: 0 = Arme + Rumpf, 1 = Beine |
+| 3 | Frequenz: 0 = 20 kHz, 1 = 100 kHz |
+| 4–7, 8–11, 12–15 | Teil 0: rechter Arm, linker Arm, Rumpf · Teil 1: rechtes Bein, linkes Bein |
+| 16 | vermutlich Prüfsumme |
+
+Die Impedanzen heißen im SDK `z20KhzLeftArmEnCode` usw. – sie sind **kodiert** und werden erst in der Rechenbibliothek entschlüsselt.
 
 ## Offene Punkte
 
-1. **Bluetooth-Namen** der PAVABA und echte Frames mitschneiden (Sensor „Rohdaten“)
-2. Daraus die Gerätefamilie bestimmen und deren `…DataAnalysis`-Klasse dekompilieren
-3. Klären, ob die Waage fertige Körperwerte oder nur Impedanzen schickt
-4. Falls aktive Verbindung nötig: Handshake (Benutzerprofil, Zeit) über Dienst `FFF0` nachbauen
+1. FFF4 an der echten Waage mitschneiden: Kommen `bf`/`df`-Frames ohne Authentifizierung und ohne dass die App etwas schreibt?
+2. Gewichtsformat mit der Anzeige der Waage abgleichen
+3. Rechenweg der App nachvollziehen: Entschlüsselung der Impedanzen und 8-Elektroden-Algorithmus (`PPCalculateKit`, Kennzahlen in `BodyParam_HT_8.json`)
+4. Benutzerprofile (Größe, Alter, Geschlecht) in der Integration
+
+## Öffentliche Quellen von Lefu
+
+- [LefuHengqi/BluetoothKit-iOSDemo](https://github.com/LefuHengqi/BluetoothKit-iOSDemo), [LefuHengqi/BluetoothKit-AndroidDemo](https://github.com/LefuHengqi/BluetoothKit-AndroidDemo), [LefuHengqi/PPCalculateKit](https://github.com/LefuHengqi/PPCalculateKit)
+- Android-SDK als AAR: [LefuHengqi/PPBaseKit-Android](https://github.com/LefuHengqi/PPBaseKit-Android)
+
+## Verwandte Projekte
+
+- [cloudbr34k84/ha-renpho-cloud-ble](https://github.com/cloudbr34k84/ha-renpho-cloud-ble) – andere Lefu-Familien (`0x1A10`)
+- [KristianP26/ble-scale-sync](https://github.com/KristianP26/ble-scale-sync), [oliexdev/openScale](https://github.com/oliexdev/openScale)

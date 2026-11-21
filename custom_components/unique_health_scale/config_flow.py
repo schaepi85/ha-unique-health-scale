@@ -14,6 +14,19 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS
 
 from .const import DOMAIN, LEFU_MANUFACTURER_ID, LEFU_SERVICE_UUID
+from .parser import CF_LENGTH
+
+
+def _looks_like_lefu(info: BluetoothServiceInfoBleak) -> bool:
+    """Lefu-Kennung, Dienst FFF0 oder das typische 6+11-Byte-Herstellerfeld."""
+    return (
+        LEFU_MANUFACTURER_ID in info.manufacturer_data
+        or LEFU_SERVICE_UUID in info.service_uuids
+        or any(
+            len(data) == 6 + CF_LENGTH and data[6] in (0x00, 0xCF)
+            for data in info.manufacturer_data.values()
+        )
+    )
 
 
 class UniqueHealthScaleConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -61,22 +74,19 @@ class UniqueHealthScaleConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(address, raise_on_progress=False)
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
-                title=self._discovered[address], data={CONF_ADDRESS: address}
+                title=self._discovered[address].split(" (")[0].removesuffix(" [Lefu]"),
+                data={CONF_ADDRESS: address},
             )
 
         current = self._async_current_ids()
         infos = sorted(
             async_discovered_service_info(self.hass, connectable=False),
-            key=lambda info: info.rssi if info.rssi is not None else -999,
-            reverse=True,
+            key=lambda info: (not _looks_like_lefu(info), -(info.rssi or -999)),
         )
         for info in infos:
             if info.address in current:
                 continue
-            is_lefu = (
-                LEFU_MANUFACTURER_ID in info.manufacturer_data
-                or LEFU_SERVICE_UUID in info.service_uuids
-            )
+            is_lefu = _looks_like_lefu(info)
             if not is_lefu and not info.name:
                 continue
             marker = " [Lefu]" if is_lefu else ""

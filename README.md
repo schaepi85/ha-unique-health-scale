@@ -1,30 +1,31 @@
 # Unique Health Scale (Lefu) für Home Assistant
 
-Lokale Home-Assistant-Integration für 8-Elektroden-Körperfettwaagen, die mit der App **Unique Health** (Shenzhen Lefu Scale Co.) arbeiten, z. B. die **PAVABA 8-Elektroden-Waage mit Griff**. Ziel: alle Messwerte direkt per Bluetooth in HA, ohne Cloud und ohne App-Zwang.
+Lokale Home-Assistant-Integration für 8-Elektroden-Körperfettwaagen, die mit der App **Unique Health** (Shenzhen Lefu Scale Co.) arbeiten, z. B. die **PAVABA 8-Elektroden-Waage mit Griff** (Bluetooth-Name `smart scale P1`). Ziel: alle Messwerte direkt per Bluetooth in HA, ohne Cloud und ohne App-Zwang.
 
-> **Status: v0.1 – Aufzeichnungsphase.** Die Integration findet die Waage per Bluetooth (automatisch über Lefu-Kennung `0x1A10` bzw. Dienst `FFF0`, sonst manuell aus der Geräteliste) und zeichnet die rohen Funk-Frames auf. Das Dekodieren von Gewicht, Impedanzen und Körperwerten folgt, sobald das Protokoll entschlüsselt ist (siehe [docs/protocol.md](docs/protocol.md)).
+> **Status: v0.2 – Gewicht funktioniert, Körperanalyse in Arbeit.**
+> Das Gewicht wird aus den Funkdaten der Waage gelesen. Für die Körperanalyse verbindet sich die Integration während der Messung mit der Waage und zeichnet Impedanzen und Herzfrequenz auf. Dieser Teil ist aus der App abgeleitet und an echter Hardware noch nicht bestätigt. Die Umrechnung der Impedanzen in Körperfett, Muskelmasse usw. fehlt noch. Details: [docs/protocol.md](docs/protocol.md).
 
 ## Voraussetzungen
 
-- Home Assistant mit Bluetooth in Reichweite der Waage (eingebauter Adapter oder ESPHome-Bluetooth-Proxy)
-- Die Waage sollte während der Tests nicht gleichzeitig mit der Unique-Health-App verbunden sein
+- Home Assistant 2024.8 oder neuer mit Bluetooth in Reichweite der Waage (eingebauter Adapter oder ESPHome-Bluetooth-Proxy mit aktiven Verbindungen)
+- Die Unique-Health-App sollte während der Messung geschlossen sein: Die Waage lässt nur eine Verbindung zu.
 
 ## Installation (HACS, benutzerdefiniertes Repository)
 
-1. HACS → Integrationen → ⋮ → *Benutzerdefinierte Repositories* → dieses Repo als *Integration* hinzufügen
+1. HACS → ⋮ → *Benutzerdefinierte Repositories* → `https://github.com/schaepi85/ha-unique-health-scale` als *Integration* hinzufügen
 2. „Unique Health Scale (Lefu)“ installieren, HA neu starten
-3. Auf die Waage stellen – HA sollte sie unter *Einstellungen → Geräte & Dienste* als entdeckt anzeigen. Falls nicht: *Integration hinzufügen → Unique Health Scale* und die Waage aus der Liste wählen (stärkstes Signal steht oben)
-
-Alternativ `custom_components/unique_health_scale` manuell nach `/config/custom_components/` kopieren.
+3. Auf die Waage stellen – HA zeigt sie unter *Einstellungen → Geräte & Dienste* als entdeckt an. Falls nicht: *Integration hinzufügen → Unique Health Scale* und die Waage aus der Liste wählen.
 
 ## Entitäten
 
 | Entität | Beschreibung |
 | --- | --- |
-| `sensor.<waage>_gewicht` | Gewicht der letzten stabilen Messung (aktiv, sobald der Decoder fertig ist) |
-| `sensor.<waage>_rohdaten` | Letzter Roh-Frame (Hex) plus Bluetooth-Name und die letzten 25 Frames als Attribute – für die Protokollanalyse |
+| Gewicht | Gewicht in kg, sobald es auf der Waage feststeht |
+| Herzfrequenz | Herzfrequenz am Ende der Messung, sofern die Waage sie liefert |
+| Impedanzen (kodiert) | Diagnose: die zehn Segment-Impedanzen (Arme, Beine, Rumpf bei 20 und 100 kHz) als Attribute, noch unentschlüsselt |
+| Rohdaten | Diagnose: letzte Funk- und Verbindungsdaten, Sitzungsstatus und Verlauf – für die Protokollanalyse |
 
-Für ausführliches Logging:
+Ausführliches Logging:
 
 ```yaml
 logger:
@@ -32,14 +33,22 @@ logger:
     custom_components.unique_health_scale: debug
 ```
 
+## Entwicklung
+
+```bash
+pip install pytest-homeassistant-custom-component aiousbwatcher pyserial
+pytest
+```
+
+Die Tests simulieren die Waage (Advertising und FFF4-Notifications) gegen ein echtes Home Assistant.
+
 ## Roadmap
 
-- [x] Erkennung der Waage, Aufzeichnung der Roh-Frames
-- [ ] Protokoll entschlüsseln (Mitschnitte + REA-Analyse von `PPBluetoothKit`)
-- [ ] Gewicht und Impedanzen dekodieren
-- [ ] Körperwerte (von der Waage gelieferte bzw. nachgerechnete Werte), Segmentwerte für Arme, Beine, Rumpf
+- [x] Waage erkennen, Rohdaten aufzeichnen
+- [x] Gewicht dekodieren
+- [ ] Impedanzen und Herzfrequenz an echter Hardware bestätigen
+- [ ] Körperwerte berechnen (Körperfett, Muskelmasse, Wasser, Segmentwerte …)
 - [ ] Mehrere Personen / Profile
-- [ ] Optional: Abruf aus der Lefu-Cloud als Fallback
 
 ## Hinweis
 

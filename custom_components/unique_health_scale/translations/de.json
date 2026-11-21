@@ -3,13 +3,13 @@
     "flow_title": "{name}",
     "step": {
       "user": {
-        "description": "Stell dich kurz auf die Waage und wähle sie dann aus der Liste (stärkstes Signal zuerst). Geräte mit Lefu-Kennung sind markiert.",
+        "description": "Stell dich kurz auf die Waage und wähle sie dann aus der Liste. Erkannte Lefu-Waagen stehen oben und sind markiert.",
         "data": {
           "address": "Gerät"
         }
       },
       "bluetooth_confirm": {
-        "description": "{name} einrichten? Stell dich kurz auf die Waage, damit sie sendet."
+        "description": "{name} einrichten?"
       }
     },
     "abort": {
@@ -21,6 +21,12 @@
     "sensor": {
       "weight": {
         "name": "Gewicht"
+      },
+      "heart_rate": {
+        "name": "Herzfrequenz"
+      },
+      "impedance": {
+        "name": "Impedanzen (kodiert)"
       },
       "raw_frame": {
         "name": "Rohdaten"

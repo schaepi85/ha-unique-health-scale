@@ -3,13 +3,13 @@
     "flow_title": "{name}",
     "step": {
       "user": {
-        "description": "Step on the scale briefly, then pick it from the list (strongest signal first). Devices with a Lefu signature are marked.",
+        "description": "Step on the scale briefly, then pick it from the list. Detected Lefu scales are listed first and marked.",
         "data": {
           "address": "Device"
         }
       },
       "bluetooth_confirm": {
-        "description": "Set up {name}? Step on the scale briefly so it starts advertising."
+        "description": "Set up {name}?"
       }
     },
     "abort": {
@@ -22,8 +22,14 @@
       "weight": {
         "name": "Weight"
       },
+      "heart_rate": {
+        "name": "Heart rate"
+      },
+      "impedance": {
+        "name": "Impedances (encoded)"
+      },
       "raw_frame": {
-        "name": "Raw frame"
+        "name": "Raw data"
       }
     }
   }

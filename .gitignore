@@ -5,3 +5,4 @@ __pycache__/
 # Rohmitschnitte koennen Koerperdaten enthalten – nur bewusst committen
 captures/*
 !captures/README.md
+.pytest_cache/
