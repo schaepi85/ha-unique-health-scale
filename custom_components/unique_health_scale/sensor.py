@@ -34,6 +34,7 @@ async def async_setup_entry(
             HeartRateSensor(device),
             ImpedanceSensor(device),
             RawSensor(device),
+            *(SegmentImpedanceSensor(device, key) for key in IMPEDANCE_KEYS),
         ]
     )
 
@@ -111,30 +112,59 @@ class HeartRateSensor(_ScaleEntity):
 
 
 class ImpedanceSensor(_ScaleEntity):
-    """Kodierte Segment-Impedanzen (20/100 kHz) der letzten Koerperanalyse."""
+    """Uebersicht der letzten Koerperanalyse: alle Impedanzen in Ohm als Attribute."""
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_icon = "mdi:sine-wave"
 
     def __init__(self, device: ScaleDevice) -> None:
         super().__init__(device, "impedance")
-        self._values: dict[str, int] = {}
+        self._raw: dict[str, int] = {}
+        self._ohm: dict[str, float] = {}
 
     def _update_from_device(self) -> bool:
         values = self._device.measurement.impedances
-        if not values or values == self._values:
+        if not values or values == self._raw:
             return False
-        self._values = dict(values)
+        self._raw = dict(values)
+        self._ohm = self._device.measurement.impedances_ohm or {}
         self._attr_native_value = sum(1 for key in IMPEDANCE_KEYS if values.get(key))
         return True
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         return {
-            **self._values,
+            **self._ohm,
             "weight_kg": self._device.measurement.weight_kg,
-            "complete": len(self._values) == len(IMPEDANCE_KEYS),
+            "complete": bool(self._ohm),
+            "raw": self._raw,
         }
+
+
+class SegmentImpedanceSensor(_ScaleEntity, RestoreSensor):
+    """Impedanz eines Koerpersegments bei 20 oder 100 kHz in Ohm."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_native_unit_of_measurement = "Ω"
+    _attr_suggested_display_precision = 1
+    _attr_icon = "mdi:sine-wave"
+
+    def __init__(self, device: ScaleDevice, key: str) -> None:
+        super().__init__(device, key)
+        self._key = key
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        if (last := await self.async_get_last_sensor_data()) is not None:
+            self._attr_native_value = last.native_value
+
+    def _update_from_device(self) -> bool:
+        ohm = self._device.measurement.impedances_ohm
+        if ohm is None or ohm[self._key] == self._attr_native_value:
+            return False
+        self._attr_native_value = ohm[self._key]
+        return True
 
 
 class RawSensor(_ScaleEntity):

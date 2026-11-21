@@ -26,10 +26,40 @@
         "name": "Heart rate"
       },
       "impedance": {
-        "name": "Impedances (encoded)"
+        "name": "Impedances"
       },
       "raw_frame": {
         "name": "Raw data"
+      },
+      "z20_right_arm": {
+        "name": "Impedance right arm 20 kHz"
+      },
+      "z20_left_arm": {
+        "name": "Impedance left arm 20 kHz"
+      },
+      "z20_trunk": {
+        "name": "Impedance trunk 20 kHz"
+      },
+      "z20_right_leg": {
+        "name": "Impedance right leg 20 kHz"
+      },
+      "z20_left_leg": {
+        "name": "Impedance left leg 20 kHz"
+      },
+      "z100_right_arm": {
+        "name": "Impedance right arm 100 kHz"
+      },
+      "z100_left_arm": {
+        "name": "Impedance left arm 100 kHz"
+      },
+      "z100_trunk": {
+        "name": "Impedance trunk 100 kHz"
+      },
+      "z100_right_leg": {
+        "name": "Impedance right leg 100 kHz"
+      },
+      "z100_left_leg": {
+        "name": "Impedance left leg 100 kHz"
       }
     }
   }

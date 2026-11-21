@@ -10,8 +10,8 @@ Drei Frame-Typen, erkennbar am ersten Byte:
 * 0xBF, 23 Bytes  – fuenf Impedanzen einer Frequenz (FFF4)
 * 0xDF, 17 Bytes  – Impedanzen in Teilpaketen (FFF4)
 
-Die Impedanzen sind vom Geraet kodiert ("EnCode"); sie werden hier
-unveraendert durchgereicht.
+Die Impedanzen sind auf der Funkstrecke verschleiert ("EnCode");
+decode_impedance() macht daraus Ohm.
 """
 
 from __future__ import annotations
@@ -28,6 +28,26 @@ FREQUENCIES = {0: 20, 1: 100}
 IMPEDANCE_KEYS = tuple(
     f"z{khz}_{segment}" for khz in FREQUENCIES.values() for segment in SEGMENTS
 )
+
+
+def decode_impedance(raw: int) -> float | None:
+    """Verschleierten Impedanzwert in Ohm umrechnen.
+
+    Die Waage verteilt den Messwert (Einheit 0,1 Ohm) und einen zufaelligen
+    Schluessel nibbleweise auf den 32-Bit-Wert:
+
+        Nibbles 0, 2, 4, 6 -> verschluesselter Wert t
+        Nibbles 1, 3       -> Schluesselbyte k
+        Nibble  5          -> Multiplikator m
+        Wert = (t - k * m) XOR k
+    """
+    nibbles = [(raw >> (4 * index)) & 0xF for index in range(7)]
+    value = nibbles[0] | nibbles[2] << 4 | nibbles[4] << 8 | nibbles[6] << 12
+    key = nibbles[1] | nibbles[3] << 4
+    tenths = (value - key * nibbles[5]) ^ key
+    if not 0 < tenths < 20000:
+        return None
+    return tenths / 10
 
 
 class Status(IntEnum):
@@ -143,6 +163,16 @@ class Measurement:
     @property
     def impedances_complete(self) -> bool:
         return all(self.impedances.get(key) for key in IMPEDANCE_KEYS)
+
+    @property
+    def impedances_ohm(self) -> dict[str, float] | None:
+        """Alle zehn Impedanzen in Ohm; None, solange welche fehlen oder unplausibel sind."""
+        if not self.impedances_complete:
+            return None
+        decoded = {key: decode_impedance(self.impedances[key]) for key in IMPEDANCE_KEYS}
+        if any(value is None for value in decoded.values()):
+            return None
+        return decoded
 
     def feed_cf(self, frame: CfFrame) -> None:
         """CF-Frame einarbeiten (Ablauf wie in der App)."""

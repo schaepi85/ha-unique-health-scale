@@ -46,8 +46,14 @@ def cf(status, hr=0, b2=0, raw=7500):
     return bytes(b)
 
 
-def bf(freq, vals):
-    return bytes([0xBF, freq]) + b"".join(v.to_bytes(4, "little") for v in vals) + b"\x00"
+def enc(tenths, key=0x35, mult=3):
+    t = (tenths ^ key) + key * mult
+    n = [(t >> (4 * i)) & 0xF for i in range(4)]
+    return n[0] | (key & 0xF) << 4 | n[1] << 8 | (key >> 4) << 12 | n[2] << 16 | mult << 20 | n[3] << 24
+
+
+def bf(freq, tenths):
+    return bytes([0xBF, freq]) + b"".join(enc(v).to_bytes(4, "little") for v in tenths) + b"\x00"
 
 
 class FakeChar:
@@ -140,22 +146,25 @@ async def test_full_session(hass, enable_bluetooth):
         notify(None, bytearray(cf(1)))
         notify(None, bytearray(cf(8)))
         inject(hass, CF_LOCKED)  # Advertising darf waehrend der Sitzung nichts zuruecksetzen
-        notify(None, bytearray(bf(0, (101, 102, 103, 104, 105))))
+        notify(None, bytearray(bf(0, (3100, 3050, 250, 2600, 2580))))
         inject(hass, CF_MEASURING)
-        notify(None, bytearray(bf(1, (201, 202, 203, 204, 205))))
+        notify(None, bytearray(bf(1, (2700, 2690, 240, 2250, 2270))))
         notify(None, bytearray(cf(3, b2=0x80)))  # Herzfrequenz wird gemessen
         await hass.async_block_till_done()
         assert state(hass, "raw_data").attributes["session"] == "verbunden, lausche auf fff4,fff1,fff2"
-        assert state(hass, "impedances_encoded").state == "10"
+        assert state(hass, "impedances").state == "10"
         notify(None, bytearray(cf(0, hr=72, b2=0xC0)))
         notify(None, bytearray(b"\x12\x34"))
         await hass.async_block_till_done()
 
         assert state(hass, "weight").state == "75.0"
         assert state(hass, "heart_rate").state == "72"
-        imp = state(hass, "impedances_encoded")
+        imp = state(hass, "impedances")
         assert imp.state == "10" and imp.attributes["complete"] is True
-        assert imp.attributes["z20_right_arm"] == 101 and imp.attributes["z100_left_leg"] == 205
+        assert imp.attributes["z20_right_arm"] == 310.0 and imp.attributes["z100_left_leg"] == 227.0
+        assert state(hass, "impedance_trunk_20_khz").state == "25.0"
+        assert state(hass, "impedance_right_leg_100_khz").state == "225.0"
+        assert state(hass, "impedance_right_leg_100_khz").attributes["unit_of_measurement"] == "Ω"
         hist = state(hass, "raw_data").attributes["history"]
         assert [h["src"] for h in hist].count("fff4") == 7
 

@@ -60,3 +60,24 @@ def test_df():
     assert m.feed(reset + bytes([p._xor(reset)])) and m.impedances == {}
     assert not m.feed(df(0, 0, (1, 2, 3))[:-1] + b"\x00")  # falsche Pruefsumme
     assert not m.feed(b"\x10\x00")
+
+
+def encode(tenths, key, mult):
+    """Gegenstueck zu decode_impedance, wie es die Waage anwendet."""
+    t = (tenths ^ key) + key * mult
+    n = [(t >> (4 * i)) & 0xF for i in range(4)]
+    return n[0] | (key & 0xF) << 4 | n[1] << 8 | (key >> 4) << 12 | n[2] << 16 | mult << 20 | n[3] << 24 | 0x5 << 28
+
+def test_decode_impedance():
+    assert p.decode_impedance(encode(3100, 0x10, 0)) == 310.0
+    for tenths in (250, 2600, 3100, 6999):
+        for key in (0x00, 0x02, 0x9D, 0xFF):
+            for mult in (0, 2, 7, 15):
+                assert p.decode_impedance(encode(tenths, key, mult)) == tenths / 10
+    assert p.decode_impedance(0) is None
+
+def test_impedances_ohm():
+    m = p.Measurement()
+    assert m.impedances_ohm is None
+    m.impedances = {k: encode(2500 + i, 0x21 + i, i) for i, k in enumerate(p.IMPEDANCE_KEYS)}
+    assert m.impedances_ohm == {k: (2500 + i) / 10 for i, k in enumerate(p.IMPEDANCE_KEYS)}

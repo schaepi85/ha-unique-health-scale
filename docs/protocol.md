@@ -72,8 +72,6 @@ Beobachtet über `FFF4` bei bestehender Verbindung:
 | direkt danach | `cf`, Status 3, Byte 2 = `0x80` | Herzfrequenz wird gemessen |
 | ca. 17 s | `cf`, Status 0, Byte 2 = `0xC0`, Byte 1 = Puls | Messung abgeschlossen |
 
-Die kodierten Impedanzen zweier Messungen derselben Person unterscheiden sich stark – die Kodierung ist also keine einfache Skalierung.
-
 ## BF-Frame (23 Bytes): Impedanzen einer Frequenz 🔎
 
 | Byte | Inhalt |
@@ -100,12 +98,25 @@ Die kodierten Impedanzen zweier Messungen derselben Person unterscheiden sich st
 
 Diese Waage nutzt DF-Frames; BF-Frames wurden bisher nicht beobachtet.
 
-Die Impedanzen heißen im SDK `z20KhzLeftArmEnCode` usw. – sie sind **kodiert** und werden erst in der Rechenbibliothek entschlüsselt.
+## Kodierung der Impedanzen ✅
+
+Die Impedanzen heißen im SDK `z20KhzLeftArmEnCode` usw. Jeder 32-Bit-Wert enthält den Messwert (Einheit 0,1 Ω) und einen Zufallsschlüssel, nibbleweise verschränkt:
+
+| Nibble (0 = niederwertig) | Inhalt |
+| --- | --- |
+| 0, 2, 4, 6 | verschlüsselter Wert `t` (niederwertiges Nibble zuerst) |
+| 1, 3 | Schlüsselbyte `k` |
+| 5 | Multiplikator `m` |
+| 7 | ungenutzt |
+
+Dekodierung: `Wert = (t − k·m) XOR k`.
+
+Zwei Messungen derselben Person ergaben damit bis auf wenige Ohm dieselben Werte in plausibler Größenordnung (Arme und Beine einige hundert Ohm, Rumpf rund 20–25 Ω, bei 100 kHz jeweils niedriger als bei 20 kHz).
 
 ## Offene Punkte
 
 1. Gewichtsformat mit der Anzeige der Waage abgleichen
-2. Rechenweg der App nachvollziehen: Entschlüsselung der Impedanzen und 8-Elektroden-Algorithmus (`PPCalculateKit`, Kennzahlen in `BodyParam_HT_8.json`)
+2. Körperwerte aus Gewicht, Profil und Impedanzen berechnen
 3. Benutzerprofile (Größe, Alter, Geschlecht) in der Integration
 
 ## Öffentliche Quellen von Lefu
