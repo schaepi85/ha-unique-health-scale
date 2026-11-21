@@ -1,0 +1,30 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "description": "Waage auswählen",
+        "data": {
+          "address": "Gerät"
+        }
+      },
+      "bluetooth_confirm": {
+        "description": "{name} einrichten? Stell dich kurz auf die Waage, damit sie sendet."
+      }
+    },
+    "abort": {
+      "already_configured": "Diese Waage ist bereits eingerichtet.",
+      "no_devices_found": "Keine Lefu-Waage gefunden. Stell dich auf die Waage und versuche es erneut."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "weight": {
+        "name": "Gewicht"
+      },
+      "raw_frame": {
+        "name": "Rohdaten"
+      }
+    }
+  }
+}

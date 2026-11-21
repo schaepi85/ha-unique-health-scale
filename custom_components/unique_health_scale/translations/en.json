@@ -1,0 +1,30 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "description": "Choose the scale",
+        "data": {
+          "address": "Device"
+        }
+      },
+      "bluetooth_confirm": {
+        "description": "Set up {name}? Step on the scale briefly so it starts advertising."
+      }
+    },
+    "abort": {
+      "already_configured": "This scale is already configured.",
+      "no_devices_found": "No Lefu scale found. Step on the scale and try again."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "weight": {
+        "name": "Weight"
+      },
+      "raw_frame": {
+        "name": "Raw frame"
+      }
+    }
+  }
+}

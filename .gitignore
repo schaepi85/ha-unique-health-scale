@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.venv/
+.DS_Store
+# Rohmitschnitte koennen Koerperdaten enthalten – nur bewusst committen
+captures/*
+!captures/README.md
