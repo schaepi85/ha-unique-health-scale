@@ -46,21 +46,19 @@ So geht die Integration mit einer Waage um, die nicht in der Liste der getestete
 
 ## Installation
 
-### Variante A: HACS (empfohlen)
+### Variante A: Marketplace (empfohlen)
 
-[HACS](https://hacs.xyz/docs/use/) muss installiert sein. Die Integration steht nicht im HACS-Katalog und wird deshalb als benutzerdefiniertes Repository hinzugefügt.
+Der **Marketplace** ist in aktuellen Home-Assistant-Versionen eingebaut und steht in der Seitenleiste. Die Integration ist dort nicht gelistet und wird deshalb über ihren GitHub-Link hinzugefügt.
 
-[![Repository in HACS öffnen](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=schaepi85&repository=ha-unique-health-scale&category=integration)
-
-Mit dem Knopf oben oder von Hand:
-
-1. In Home Assistant **HACS** öffnen.
-2. Oben rechts **⋮ → Benutzerdefinierte Repositories**.
-3. Bei *Repository* `https://github.com/schaepi85/ha-unique-health-scale` eintragen, als *Typ* **Integration** wählen, **Hinzufügen**.
-4. In HACS nach **Unique Health Scale (Lefu)** suchen, öffnen und unten rechts **Herunterladen**.
+1. In Home Assistant den **Marketplace** öffnen.
+2. Oben rechts **Über Link hinzufügen** wählen.
+3. Bei *GitHub-Link* `https://github.com/schaepi85/ha-unique-health-scale` eintragen und **Hinzufügen**.
+4. **Unique Health Scale (Lefu)** öffnen (falls die Seite nicht von selbst erscheint: danach suchen) und installieren.
 5. **Home Assistant neu starten** (*Einstellungen → System → ⏻ → Home Assistant neu starten*).
 
-Aktualisierungen erscheinen später von selbst unter *Einstellungen → Aktualisierungen*; nach jeder Aktualisierung einmal neu starten.
+Aktualisierungen erscheinen später von selbst unter *Einstellungen → Aktualisierungen*; nach jeder Aktualisierung einmal neu starten. Angezeigt wird die Versionsnummer des jeweiligen [Release](https://github.com/schaepi85/ha-unique-health-scale/releases), z. B. `v0.6.0`.
+
+**Ältere Home-Assistant-Versionen mit [HACS](https://hacs.xyz/docs/use/):** *HACS → ⋮ → Benutzerdefinierte Repositories*, dieselbe Adresse eintragen, als Typ **Integration** wählen, danach die Integration herunterladen und neu starten.
 
 ### Variante B: von Hand
 
@@ -183,7 +181,7 @@ Fehler bitte über [ein Issue](https://github.com/schaepi85/ha-unique-health-sca
 
 [examples/dashboard-card.yaml](examples/dashboard-card.yaml) ist eine fertige Karte für ein (mobiles) Dashboard: oben die wichtigsten Werte, darunter Verläufe über 90 Tage (Gewicht mit Zielgewicht sowie Fett-, Muskel- und Wasseranteil) und alle übrigen Körperwerte nach Gruppen, einschließlich der Segmente. Die Symbolfarbe zeigt die Einstufung (blau = niedrig, grün = normal, orange = hoch); Tippen auf einen Wert öffnet seinen Verlauf.
 
-Benötigte Frontend-Karten (HACS → Frontend):
+Benötigte Frontend-Karten (im Marketplace bzw. in HACS als Dashboard-Erweiterung zu finden):
 
 - [Mushroom](https://github.com/piitaya/lovelace-mushroom)
 - [stack-in-card](https://github.com/custom-cards/stack-in-card)
