@@ -96,7 +96,7 @@ Benötigte Frontend-Karten (HACS → Frontend):
 - [ApexCharts Card](https://github.com/RomRider/apexcharts-card)
 - optional [card-mod](https://github.com/thomasloven/lovelace-card-mod) für den Hintergrund (ohne card-mod den `card_mod`-Block löschen)
 
-Einfügen über *Dashboard bearbeiten → Karte hinzufügen → Manuell*. Die Entity-IDs gehen von einem Gerät namens „Smart Scale P1“ und deutscher Oberfläche aus (`sensor.smart_scale_p1_gewicht` usw.); bei anderen Namen `sensor.smart_scale_p1_` per Suchen & Ersetzen anpassen. Die Verläufe nutzen die Langzeitstatistik von Home Assistant (Tagesmittel) und füllen sich nach den ersten Messtagen.
+Einfügen über *Dashboard bearbeiten → Karte hinzufügen → Manuell*. Die Karte zeigt die Werte einer Person. Ihre Entity-IDs gehen von deutscher Oberfläche und dem Präfix `sensor.smart_scale_p1_` aus (`sensor.smart_scale_p1_gewicht` usw.), wie ihn eine von v0.4 aktualisierte Installation behält. Bei einer neuen Installation tragen die Sensoren den Namen der Person (z. B. `sensor.alex_gewicht`): dann `sensor.smart_scale_p1_` per Suchen & Ersetzen durch `sensor.<name>_` ersetzen. Für mehrere Personen die Karte je Person einmal einfügen. Die Verläufe nutzen die Langzeitstatistik von Home Assistant (Tagesmittel) und füllen sich nach den ersten Messtagen.
 
 ## Entwicklung
 
