@@ -30,4 +30,4 @@ Eine bewusste Abweichung: Passen die zehn Impedanzen nicht zueinander (nach der 
 
 - Schätzwerte, keine medizinischen Messwerte. Tagesform, Trinkmenge und feuchte oder trockene Haut verschieben die Impedanzen spürbar.
 - Die Kalibrierfaktoren gelten für die `smart scale P1` (Lefu CF597).
-- Ein Profil pro Waage; mehrere Personen werden noch nicht unterschieden.
+- Jede Person rechnet mit ihrem eigenen Profil; die Zuordnung einer Wiegung zur Person erfolgt über das Gewicht (siehe README).

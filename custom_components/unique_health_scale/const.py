@@ -25,3 +25,21 @@ CONF_SEX = "sex"
 CONF_HEIGHT = "height"
 CONF_BIRTHDAY = "birthday"
 CONF_AGE = "age"
+
+# Mehrere Personen pro Waage (Optionen des Config-Eintrags)
+CONF_PERSONS = "persons"
+CONF_ID = "id"
+CONF_NAME = "name"
+CONF_REFERENCE_WEIGHT = "reference_weight"
+CONF_TOLERANCE = "tolerance"
+CONF_NOTIFY = "notify"
+
+# Zuordnung einer Wiegung: so weit darf das Gewicht vom letzten Gewicht der
+# Person abweichen, und so viel naeher muss sie als die naechste Person liegen.
+DEFAULT_TOLERANCE_KG = 3.0
+MIN_GAP_KG = 1.0
+
+# Auswahl "keiner Person zuordnen" in der Zuordnungs-Entitaet
+UNASSIGNED = "–"
+
+EVENT_MOBILE_ACTION = "mobile_app_notification_action"

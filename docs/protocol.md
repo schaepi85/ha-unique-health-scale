@@ -117,7 +117,6 @@ Zwei Messungen derselben Person ergaben damit bis auf wenige Ohm dieselben Werte
 
 1. Gewichtsformat mit der Anzeige der Waage abgleichen
 2. Körperwerte aus Gewicht, Profil und Impedanzen berechnen
-3. Benutzerprofile (Größe, Alter, Geschlecht) in der Integration
 
 ## Öffentliche Quellen von Lefu
 

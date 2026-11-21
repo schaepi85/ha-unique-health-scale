@@ -16,13 +16,14 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfMass
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .bodycomp import BODY_TYPES, SEGMENTS, BodyComposition
 from .const import DOMAIN
-from .device import ScaleDevice
+from .device import NO_PERSONS, PersonData, ScaleDevice
 from .parser import IMPEDANCE_KEYS
+from .profile import person_identifier
 
 
 async def async_setup_entry(
@@ -32,16 +33,20 @@ async def async_setup_entry(
 ) -> None:
     """Sensoren fuer eine Waage anlegen."""
     device: ScaleDevice = entry.runtime_data
-    async_add_entities(
-        [
-            WeightSensor(device),
-            HeartRateSensor(device),
-            ImpedanceSensor(device),
-            RawSensor(device),
-            *(SegmentImpedanceSensor(device, key) for key in IMPEDANCE_KEYS),
-            *(BodySensor(device, description) for description in BODY_SENSORS),
+    entities: list[SensorEntity] = [
+        LastWeightSensor(device),
+        ImpedanceSensor(device),
+        RawSensor(device),
+        *(SegmentImpedanceSensor(device, key) for key in IMPEDANCE_KEYS),
+    ]
+    for person in device.persons.values():
+        entities += [
+            WeightSensor(device, person),
+            HeartRateSensor(device, person),
+            LastMeasurementSensor(device, person),
+            *(BodySensor(device, person, description) for description in BODY_SENSORS),
         ]
-    )
+    async_add_entities(entities)
 
 
 class _ScaleEntity(SensorEntity):
@@ -52,13 +57,7 @@ class _ScaleEntity(SensorEntity):
         self._device = device
         self._attr_unique_id = f"{device.address}_{key}"
         self._attr_translation_key = key
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device.address)},
-            connections={(CONNECTION_BLUETOOTH, device.address)},
-            name=device.name,
-            manufacturer="Lefu (PAVABA)",
-            model="8-Elektroden-Koerperfettwaage",
-        )
+        self._attr_device_info = device.device_info
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
@@ -74,8 +73,58 @@ class _ScaleEntity(SensorEntity):
         raise NotImplementedError
 
 
-class WeightSensor(_ScaleEntity, RestoreSensor):
-    """Gewicht der letzten Messung, sobald es auf der Waage feststeht."""
+class _PersonEntity(_ScaleEntity):
+    """Sensor einer Person; haengt an deren eigenem Geraet.
+
+    Merkt sich den Stand vor einer Wiegung, damit eine falsche Zuordnung
+    zurueckgenommen werden kann.
+    """
+
+    def __init__(self, device: ScaleDevice, person: PersonData, key: str) -> None:
+        super().__init__(device, key)
+        self._person = person
+        identifier = person_identifier(device.address, person.person.id)
+        self._attr_unique_id = f"{identifier}_{key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, identifier)},
+            name=person.person.name,
+            manufacturer="Lefu (PAVABA)",
+            model=device.name,
+            via_device=(DOMAIN, device.address),
+        )
+        self._revert_seen = person.revert_serial
+        self._undo: tuple[int, Any, dict[str, Any] | None] | None = None
+
+    @callback
+    def _handle_update(self) -> None:
+        person = self._person
+        if person.revert_serial != self._revert_seen:
+            self._revert_seen = person.revert_serial
+            if self._undo is not None and self._undo[0] == person.weighing_serial:
+                _, self._attr_native_value, attributes = self._undo
+                if attributes is not None:
+                    self._attr_extra_state_attributes = attributes
+                self._undo = None
+                self._after_revert()
+                self.async_write_ha_state()
+            return
+        attributes = getattr(self, "_attr_extra_state_attributes", None)
+        before = (
+            person.weighing_serial,
+            self._attr_native_value,
+            dict(attributes) if attributes is not None else None,
+        )
+        if self._update_from_device():
+            if self._undo is None or self._undo[0] != person.weighing_serial:
+                self._undo = before
+            self.async_write_ha_state()
+
+    def _after_revert(self) -> None:
+        """Interne Merker nach dem Zuruecknehmen angleichen."""
+
+
+class LastWeightSensor(_ScaleEntity, RestoreSensor):
+    """Gewicht der letzten Wiegung auf der Waage, egal von wem."""
 
     _attr_device_class = SensorDeviceClass.WEIGHT
     _attr_state_class = SensorStateClass.MEASUREMENT
@@ -83,7 +132,7 @@ class WeightSensor(_ScaleEntity, RestoreSensor):
     _attr_suggested_display_precision = 2
 
     def __init__(self, device: ScaleDevice) -> None:
-        super().__init__(device, "weight")
+        super().__init__(device, "last_weight")
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
@@ -98,21 +147,78 @@ class WeightSensor(_ScaleEntity, RestoreSensor):
         return True
 
 
-class HeartRateSensor(_ScaleEntity):
+class WeightSensor(_PersonEntity, RestoreSensor):
+    """Gewicht der letzten Wiegung der Person."""
+
+    _attr_device_class = SensorDeviceClass.WEIGHT
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_native_unit_of_measurement = UnitOfMass.KILOGRAMS
+    _attr_suggested_display_precision = 2
+
+    def __init__(self, device: ScaleDevice, person: PersonData) -> None:
+        super().__init__(device, person, "weight")
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        if (last := await self.async_get_last_sensor_data()) is not None:
+            self._attr_native_value = last.native_value
+            # Das letzte Gewicht entscheidet nach einem Neustart ueber die Zuordnung
+            if self._person.weight_kg is None and last.native_value is not None:
+                self._person.weight_kg = float(last.native_value)
+        if self._update_from_device():
+            self.async_write_ha_state()
+
+    def _update_from_device(self) -> bool:
+        weight = self._person.weight_kg
+        if weight is None or weight == self._attr_native_value:
+            return False
+        self._attr_native_value = weight
+        return True
+
+
+class HeartRateSensor(_PersonEntity, RestoreSensor):
     """Herzfrequenz, falls die Waage sie am Ende der Messung liefert."""
 
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = "bpm"
     _attr_icon = "mdi:heart-pulse"
 
-    def __init__(self, device: ScaleDevice) -> None:
-        super().__init__(device, "heart_rate")
+    def __init__(self, device: ScaleDevice, person: PersonData) -> None:
+        super().__init__(device, person, "heart_rate")
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        if (last := await self.async_get_last_sensor_data()) is not None:
+            self._attr_native_value = last.native_value
 
     def _update_from_device(self) -> bool:
-        heart_rate = self._device.measurement.heart_rate
+        heart_rate = self._person.heart_rate
         if not heart_rate or heart_rate == self._attr_native_value:
             return False
         self._attr_native_value = heart_rate
+        return True
+
+
+class LastMeasurementSensor(_PersonEntity, RestoreSensor):
+    """Zeitpunkt der letzten Wiegung der Person."""
+
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+
+    def __init__(self, device: ScaleDevice, person: PersonData) -> None:
+        super().__init__(device, person, "last_measurement")
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        if (last := await self.async_get_last_sensor_data()) is not None:
+            self._attr_native_value = last.native_value
+        if self._update_from_device():
+            self.async_write_ha_state()
+
+    def _update_from_device(self) -> bool:
+        measured_at = self._person.measured_at
+        if measured_at is None or measured_at == self._attr_native_value:
+            return False
+        self._attr_native_value = measured_at
         return True
 
 
@@ -195,7 +301,11 @@ class RawSensor(_ScaleEntity):
             "session": self._device.session_state,
             "status": self._device.measurement.status,
             "live_weight_kg": self._device.measurement.live_weight_kg,
-            "body_composition": self._device.body_state,
+            "assignment": self._device.assignment_state,
+            "body_composition": {
+                data.person.name: data.body_state for data in self._device.persons.values()
+            }
+            or NO_PERSONS,
             "gatt_characteristics": self._device.gatt_characteristics,
             "history": list(self._device.history),
         }
@@ -353,15 +463,17 @@ BODY_SENSORS: tuple[BodySensorDescription, ...] = (
 )
 
 
-class BodySensor(_ScaleEntity, RestoreSensor):
+class BodySensor(_PersonEntity, RestoreSensor):
     """Ein aus Gewicht, Impedanzen und Profil berechneter Koerperwert."""
 
     entity_description: BodySensorDescription
 
-    def __init__(self, device: ScaleDevice, description: BodySensorDescription) -> None:
-        super().__init__(device, description.key)
+    def __init__(
+        self, device: ScaleDevice, person: PersonData, description: BodySensorDescription
+    ) -> None:
+        super().__init__(device, person, description.key)
         self.entity_description = description
-        self._serial = device.body_serial
+        self._serial = person.body_serial
         self._attr_extra_state_attributes: dict[str, Any] = {}
 
     async def async_added_to_hass(self) -> None:
@@ -379,11 +491,14 @@ class BodySensor(_ScaleEntity, RestoreSensor):
         self._serial = -1
         self._update_from_device()
 
+    def _after_revert(self) -> None:
+        self._serial = self._person.body_serial
+
     def _update_from_device(self) -> bool:
-        body = self._device.body
-        if body is None or self._serial == self._device.body_serial:
+        body = self._person.body
+        if body is None or self._serial == self._person.body_serial:
             return False
-        self._serial = self._device.body_serial
+        self._serial = self._person.body_serial
         description = self.entity_description
         self._attr_native_value = description.value(body)
         if description.attributes is not None:
