@@ -85,6 +85,19 @@ logger:
     custom_components.unique_health_scale: debug
 ```
 
+## Dashboard-Beispiel
+
+[examples/dashboard-card.yaml](examples/dashboard-card.yaml) ist eine fertige Karte für ein (mobiles) Dashboard: oben die wichtigsten Werte, darunter Verläufe über 90 Tage (Gewicht mit Zielgewicht sowie Fett-, Muskel- und Wasseranteil) und alle übrigen Körperwerte nach Gruppen, einschließlich der Segmente. Die Symbolfarbe zeigt die Einstufung (blau = niedrig, grün = normal, orange = hoch); Tippen auf einen Wert öffnet seinen Verlauf.
+
+Benötigte Frontend-Karten (HACS → Frontend):
+
+- [Mushroom](https://github.com/piitaya/lovelace-mushroom)
+- [stack-in-card](https://github.com/custom-cards/stack-in-card)
+- [ApexCharts Card](https://github.com/RomRider/apexcharts-card)
+- optional [card-mod](https://github.com/thomasloven/lovelace-card-mod) für den Hintergrund (ohne card-mod den `card_mod`-Block löschen)
+
+Einfügen über *Dashboard bearbeiten → Karte hinzufügen → Manuell*. Die Entity-IDs gehen von einem Gerät namens „Smart Scale P1“ und deutscher Oberfläche aus (`sensor.smart_scale_p1_gewicht` usw.); bei anderen Namen `sensor.smart_scale_p1_` per Suchen & Ersetzen anpassen. Die Verläufe nutzen die Langzeitstatistik von Home Assistant (Tagesmittel) und füllen sich nach den ersten Messtagen.
+
 ## Entwicklung
 
 ```bash
