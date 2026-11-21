@@ -316,7 +316,8 @@ async def test_body_composition(hass, enable_bluetooth):
         from custom_components.unique_health_scale.sensor import BODY_SENSORS
         registry = er.async_get(hass)
         person_device = dr.async_get(hass).async_get_device(identifiers={(DOMAIN, f"{ADDR}_a1")})
-        assert person_device.name == "Alex" and person_device.via_device_id is not None
+        scale_device = dr.async_get(hass).async_get_device(identifiers={(DOMAIN, ADDR)})
+        assert person_device.name == "Alex" and person_device.via_device_id == scale_device.id
         for description in BODY_SENSORS:
             entity_id = registry.async_get_entity_id("sensor", DOMAIN, f"{ADDR}_a1_{description.key}")
             assert hass.states.get(entity_id).state not in ("unknown", "unavailable"), description.key
@@ -613,6 +614,7 @@ async def test_migration_keeps_entities_and_history(hass, enable_bluetooth):
     assert person == {"id": person["id"], "name": "Person 1", "sex": "male", "height": 180, "birthday": "1990-05-17"}
     person_device = devices.async_get_device(identifiers={(DOMAIN, f"{ADDR}_{person['id']}")})
     assert person_device.area_id == area.id and person_device.name == "Person 1"
+    assert person_device.via_device_id == scale.id
     for key in ("weight", "heart_rate", "bmi", "body_fat_percent", "muscle_left_leg"):
         entity = registry.async_get(old[key])
         assert entity.unique_id == f"{ADDR}_{person['id']}_{key}" and entity.device_id == person_device.id, key
@@ -636,3 +638,15 @@ async def test_migration_without_profile(hass, enable_bluetooth):
     assert entry.version == 2 and entry.options == {"persons": []}
     assert registry.async_get(weight).unique_id == f"{ADDR}_last_weight"
     assert registry.async_get(bmi) is None
+
+
+async def test_renaming_a_person_entity_keeps_it(hass, enable_bluetooth):
+    """Entity-ID aendern legt die Entitaet neu an; das darf am Geraet der Person nicht scheitern."""
+    with patch("custom_components.unique_health_scale.device.bluetooth.async_ble_device_from_address", return_value=None):
+        await setup(hass, persons(ALEX))
+        er.async_get(hass).async_update_entity("sensor.alex_last_measurement", new_entity_id="sensor.scale_alex_last")
+        await hass.async_block_till_done()
+        assert hass.states.get("sensor.scale_alex_last") is not None
+        from custom_components.unique_health_scale import sensor
+        import inspect
+        assert "via_device=" not in inspect.getsource(sensor)
