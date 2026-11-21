@@ -32,19 +32,19 @@ aa bb cc dd ee ff | cf 00 00 4c 1d 00 00 00 00 08 96
 | Byte | Inhalt | Status |
 | --- | --- | --- |
 | 0 | `0xCF` | ✅ |
-| 1 | Herzfrequenz, gültig wenn Byte 2 = `0xC0` | 🔎 |
-| 2 | `0x80` = Herzfrequenz wird gemessen (✅), `0xC0` = Herzfrequenz liegt vor (🔎) | |
+| 1 | Herzfrequenz in Schlägen pro Minute, gültig wenn Byte 2 = `0xC0` | ✅ |
+| 2 | `0x80` = Herzfrequenz wird gemessen, `0xC0` = Herzfrequenz liegt vor | ✅ |
 | 3–4 | Gewicht, Little Endian, Einheit 0,01 kg | ✅ |
 | 5–7 | bei dieser Familie ungenutzt (andere Familien: Impedanz) | ✅ immer 0 |
 | 8 | Anzeigeeinheit der Waage | 🔎 |
-| 9 | Status, siehe unten | ✅ 1, 3 und 8 |
+| 9 | Status, siehe unten | ✅ 0, 1, 3 und 8 |
 | 10 | Prüfsumme: XOR der Bytes 0–9 | ✅ |
 
 Status (Byte 9):
 
 | Wert | Bedeutung |
 | --- | --- |
-| 0 | Messung abgeschlossen 🔎 |
+| 0 | Messung abgeschlossen ✅ |
 | 1 | Gewicht schwankt noch ✅ |
 | 2 | Überlast 🔎 |
 | 3 | Herzfrequenz wird gemessen (zusammen mit Byte 2 = `0x80`) ✅ |
@@ -59,6 +59,20 @@ Status (Byte 9):
 - Schreiben über `FFF1` (Zeit setzen, Einheit, Körperfett zurückschreiben); Keep-alive ist der Befehl `1000`. 🔎
 - Die App kennt eine optionale Authentifizierung (Befehle `C0`–`C3`, AES); diese Waage braucht sie zum Mitlesen nicht.
 - Die App schreibt nach der Berechnung Werte auf die Waage zurück (`cmdWirteBodyFat`). Die Körperwerte entstehen also **in der App**, nicht auf der Waage.
+
+## Ablauf einer Messung ✅
+
+Beobachtet über `FFF4` bei bestehender Verbindung:
+
+| Zeit | Frame | Bedeutung |
+| --- | --- | --- |
+| 0 s | `cf`, Status 1, etwa viermal pro Sekunde | Gewicht pendelt sich ein |
+| ca. 4 s | `cf`, Status 8 | Gewicht steht fest |
+| ca. 9 s | vier `df`-Frames (20 kHz Arme+Rumpf, 20 kHz Beine, 100 kHz Arme+Rumpf, 100 kHz Beine) | Impedanzen |
+| direkt danach | `cf`, Status 3, Byte 2 = `0x80` | Herzfrequenz wird gemessen |
+| ca. 17 s | `cf`, Status 0, Byte 2 = `0xC0`, Byte 1 = Puls | Messung abgeschlossen |
+
+Die kodierten Impedanzen zweier Messungen derselben Person unterscheiden sich stark – die Kodierung ist also keine einfache Skalierung.
 
 ## BF-Frame (23 Bytes): Impedanzen einer Frequenz 🔎
 
@@ -90,10 +104,9 @@ Die Impedanzen heißen im SDK `z20KhzLeftArmEnCode` usw. – sie sind **kodiert*
 
 ## Offene Punkte
 
-1. Ende der Messung mitschneiden: Herzfrequenz (Byte 2 = `0xC0`) und Status 0
-2. Gewichtsformat mit der Anzeige der Waage abgleichen
-3. Rechenweg der App nachvollziehen: Entschlüsselung der Impedanzen und 8-Elektroden-Algorithmus (`PPCalculateKit`, Kennzahlen in `BodyParam_HT_8.json`)
-4. Benutzerprofile (Größe, Alter, Geschlecht) in der Integration
+1. Gewichtsformat mit der Anzeige der Waage abgleichen
+2. Rechenweg der App nachvollziehen: Entschlüsselung der Impedanzen und 8-Elektroden-Algorithmus (`PPCalculateKit`, Kennzahlen in `BodyParam_HT_8.json`)
+3. Benutzerprofile (Größe, Alter, Geschlecht) in der Integration
 
 ## Öffentliche Quellen von Lefu
 

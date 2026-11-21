@@ -2,8 +2,8 @@
 
 Lokale Home-Assistant-Integration für 8-Elektroden-Körperfettwaagen, die mit der App **Unique Health** (Shenzhen Lefu Scale Co.) arbeiten, z. B. die **PAVABA 8-Elektroden-Waage mit Griff** (Bluetooth-Name `smart scale P1`). Ziel: alle Messwerte direkt per Bluetooth in HA, ohne Cloud und ohne App-Zwang.
 
-> **Status: v0.2 – Gewicht funktioniert, Körperanalyse in Arbeit.**
-> Das Gewicht wird aus den Funkdaten der Waage gelesen. Für die Körperanalyse verbindet sich die Integration während der Messung mit der Waage und liest die zehn Segment-Impedanzen mit (an echter Hardware bestätigt). Die Herzfrequenz ist noch unbestätigt. Die Umrechnung der Impedanzen in Körperfett, Muskelmasse usw. fehlt noch. Details: [docs/protocol.md](docs/protocol.md).
+> **Status: v0.2 – Gewicht, Herzfrequenz und Roh-Impedanzen funktionieren, Körperwerte in Arbeit.**
+> Das Gewicht wird aus den Funkdaten der Waage gelesen. Für die Körperanalyse verbindet sich die Integration während der Messung mit der Waage und liest die zehn Segment-Impedanzen und die Herzfrequenz mit (an echter Hardware bestätigt). Die Umrechnung der Impedanzen in Körperfett, Muskelmasse usw. fehlt noch. Details: [docs/protocol.md](docs/protocol.md).
 
 ## Voraussetzungen
 
@@ -21,7 +21,7 @@ Lokale Home-Assistant-Integration für 8-Elektroden-Körperfettwaagen, die mit d
 | Entität | Beschreibung |
 | --- | --- |
 | Gewicht | Gewicht in kg, sobald es auf der Waage feststeht |
-| Herzfrequenz | Herzfrequenz am Ende der Messung, sofern die Waage sie liefert |
+| Herzfrequenz | Herzfrequenz am Ende der Messung |
 | Impedanzen (kodiert) | Diagnose: die zehn Segment-Impedanzen (Arme, Beine, Rumpf bei 20 und 100 kHz) als Attribute, noch unentschlüsselt |
 | Rohdaten | Diagnose: letzte Funk- und Verbindungsdaten, Sitzungsstatus und Verlauf – für die Protokollanalyse |
 
@@ -47,7 +47,7 @@ Die Tests simulieren die Waage (Advertising und FFF4-Notifications) gegen ein ec
 - [x] Waage erkennen, Rohdaten aufzeichnen
 - [x] Gewicht dekodieren
 - [x] Impedanzen an echter Hardware mitlesen
-- [ ] Herzfrequenz bestätigen
+- [x] Herzfrequenz mitlesen
 - [ ] Körperwerte berechnen (Körperfett, Muskelmasse, Wasser, Segmentwerte …)
 - [ ] Mehrere Personen / Profile
 
