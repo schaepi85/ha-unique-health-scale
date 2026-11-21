@@ -2,7 +2,7 @@
 
 Lokale Home-Assistant-Integration für 8-Elektroden-Körperfettwaagen, die mit der App **Unique Health** (Shenzhen Lefu Scale Co.) arbeiten, z. B. die **PAVABA 8-Elektroden-Waage mit Griff**. Ziel: alle Messwerte direkt per Bluetooth in HA, ohne Cloud und ohne App-Zwang.
 
-> **Status: v0.1 – Aufzeichnungsphase.** Die Integration erkennt die Waage (Bluetooth Company ID `0x1A10`) und zeichnet die rohen Funk-Frames auf. Das Dekodieren von Gewicht, Impedanzen und Körperwerten folgt, sobald das Protokoll entschlüsselt ist (siehe [docs/protocol.md](docs/protocol.md)).
+> **Status: v0.1 – Aufzeichnungsphase.** Die Integration findet die Waage per Bluetooth (automatisch über Lefu-Kennung `0x1A10` bzw. Dienst `FFF0`, sonst manuell aus der Geräteliste) und zeichnet die rohen Funk-Frames auf. Das Dekodieren von Gewicht, Impedanzen und Körperwerten folgt, sobald das Protokoll entschlüsselt ist (siehe [docs/protocol.md](docs/protocol.md)).
 
 ## Voraussetzungen
 
@@ -13,7 +13,7 @@ Lokale Home-Assistant-Integration für 8-Elektroden-Körperfettwaagen, die mit d
 
 1. HACS → Integrationen → ⋮ → *Benutzerdefinierte Repositories* → dieses Repo als *Integration* hinzufügen
 2. „Unique Health Scale (Lefu)“ installieren, HA neu starten
-3. Auf die Waage stellen – HA sollte sie unter *Einstellungen → Geräte & Dienste* als entdeckt anzeigen
+3. Auf die Waage stellen – HA sollte sie unter *Einstellungen → Geräte & Dienste* als entdeckt anzeigen. Falls nicht: *Integration hinzufügen → Unique Health Scale* und die Waage aus der Liste wählen (stärkstes Signal steht oben)
 
 Alternativ `custom_components/unique_health_scale` manuell nach `/config/custom_components/` kopieren.
 
@@ -22,7 +22,7 @@ Alternativ `custom_components/unique_health_scale` manuell nach `/config/custom_
 | Entität | Beschreibung |
 | --- | --- |
 | `sensor.<waage>_gewicht` | Gewicht der letzten stabilen Messung (aktiv, sobald der Decoder fertig ist) |
-| `sensor.<waage>_rohdaten` | Letzter Roh-Frame (Hex) plus die letzten 25 Frames als Attribut – für die Protokollanalyse |
+| `sensor.<waage>_rohdaten` | Letzter Roh-Frame (Hex) plus Bluetooth-Name und die letzten 25 Frames als Attribute – für die Protokollanalyse |
 
 Für ausführliches Logging:
 

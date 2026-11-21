@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, LEFU_MANUFACTURER_ID, RAW_HISTORY_SIZE
+from .const import DOMAIN, RAW_HISTORY_SIZE
 from .parser import parse_advertisement
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,12 +48,24 @@ async def async_setup_entry(
         info: bluetooth.BluetoothServiceInfoBleak,
         change: bluetooth.BluetoothChange,
     ) -> None:
-        data = info.manufacturer_data.get(LEFU_MANUFACTURER_ID)
-        if data is None:
+        frame = {
+            "manufacturer_data": {
+                f"0x{cid:04X}": data.hex()
+                for cid, data in info.manufacturer_data.items()
+            },
+            "service_data": {
+                uuid: data.hex() for uuid, data in info.service_data.items()
+            },
+        }
+        if not frame["manufacturer_data"] and not frame["service_data"]:
             return
-        _LOGGER.debug("Lefu-Frame von %s: %s (RSSI %s)", address, data.hex(), info.rssi)
-        raw.handle_frame(data, info)
-        reading = parse_advertisement(data)
+        _LOGGER.debug(
+            "Frame von %s (%s, RSSI %s): %s", address, info.name, info.rssi, frame
+        )
+        raw.handle_frame(frame, info)
+        reading = parse_advertisement(
+            info.name, dict(info.manufacturer_data), dict(info.service_data)
+        )
         if reading and reading.stable and reading.weight_kg is not None:
             weight.handle_weight(reading.weight_kg)
 
@@ -95,7 +107,7 @@ class WeightSensor(_ScaleEntity):
 
 
 class RawAdvertisementSensor(_ScaleEntity):
-    """Letzter Roh-Frame als Hex – Hilfsmittel fuer die Protokollanalyse."""
+    """Letzter Roh-Frame (alle Hersteller- und Service-Daten) fuer die Protokollanalyse."""
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
@@ -106,16 +118,18 @@ class RawAdvertisementSensor(_ScaleEntity):
 
     @callback
     def handle_frame(
-        self, data: bytes, info: bluetooth.BluetoothServiceInfoBleak
+        self, frame: dict[str, dict[str, str]], info: bluetooth.BluetoothServiceInfoBleak
     ) -> None:
-        hexdata = data.hex()
-        if self._history and self._history[-1]["hex"] == hexdata:
+        if self._history and self._history[-1]["frame"] == frame:
             return
         self._last_info = info
         self._history.append(
-            {"time": datetime.now(timezone.utc).isoformat(), "hex": hexdata}
+            {"time": datetime.now(timezone.utc).isoformat(), "frame": frame}
         )
-        self._attr_native_value = hexdata[:255]
+        summary = " ".join(
+            f"{cid}:{data}" for cid, data in frame["manufacturer_data"].items()
+        ) or " ".join(f"{u[4:8]}:{d}" for u, d in frame["service_data"].items())
+        self._attr_native_value = summary[:255]
         self.async_write_ha_state()
 
     @property

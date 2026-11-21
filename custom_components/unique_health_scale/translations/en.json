@@ -3,7 +3,7 @@
     "flow_title": "{name}",
     "step": {
       "user": {
-        "description": "Choose the scale",
+        "description": "Step on the scale briefly, then pick it from the list (strongest signal first). Devices with a Lefu signature are marked.",
         "data": {
           "address": "Device"
         }
@@ -14,7 +14,7 @@
     },
     "abort": {
       "already_configured": "This scale is already configured.",
-      "no_devices_found": "No Lefu scale found. Step on the scale and try again."
+      "no_devices_found": "No Bluetooth device found. Step on the scale and try again."
     }
   },
   "entity": {

@@ -3,7 +3,7 @@
     "flow_title": "{name}",
     "step": {
       "user": {
-        "description": "Waage auswählen",
+        "description": "Stell dich kurz auf die Waage und wähle sie dann aus der Liste (stärkstes Signal zuerst). Geräte mit Lefu-Kennung sind markiert.",
         "data": {
           "address": "Gerät"
         }
@@ -14,7 +14,7 @@
     },
     "abort": {
       "already_configured": "Diese Waage ist bereits eingerichtet.",
-      "no_devices_found": "Keine Lefu-Waage gefunden. Stell dich auf die Waage und versuche es erneut."
+      "no_devices_found": "Kein Bluetooth-Gerät gefunden. Stell dich auf die Waage und versuche es erneut."
     }
   },
   "entity": {

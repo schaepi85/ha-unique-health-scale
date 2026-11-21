@@ -13,7 +13,7 @@ from homeassistant.components.bluetooth import (
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS
 
-from .const import DOMAIN, LEFU_MANUFACTURER_ID
+from .const import DOMAIN, LEFU_MANUFACTURER_ID, LEFU_SERVICE_UUID
 
 
 class UniqueHealthScaleConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -55,7 +55,7 @@ class UniqueHealthScaleConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Manuell aus den gerade sichtbaren Lefu-Geraeten waehlen."""
+        """Manuell aus den gerade sichtbaren Bluetooth-Geraeten waehlen."""
         if user_input is not None:
             address = user_input[CONF_ADDRESS]
             await self.async_set_unique_id(address, raise_on_progress=False)
@@ -65,13 +65,23 @@ class UniqueHealthScaleConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         current = self._async_current_ids()
-        for info in async_discovered_service_info(self.hass, connectable=False):
+        infos = sorted(
+            async_discovered_service_info(self.hass, connectable=False),
+            key=lambda info: info.rssi if info.rssi is not None else -999,
+            reverse=True,
+        )
+        for info in infos:
             if info.address in current:
                 continue
-            if LEFU_MANUFACTURER_ID not in info.manufacturer_data:
+            is_lefu = (
+                LEFU_MANUFACTURER_ID in info.manufacturer_data
+                or LEFU_SERVICE_UUID in info.service_uuids
+            )
+            if not is_lefu and not info.name:
                 continue
+            marker = " [Lefu]" if is_lefu else ""
             self._discovered[info.address] = (
-                f"{info.name or 'Lefu-Waage'} ({info.address})"
+                f"{info.name or 'Unbekannt'}{marker} ({info.address}, {info.rssi} dBm)"
             )
 
         if not self._discovered:

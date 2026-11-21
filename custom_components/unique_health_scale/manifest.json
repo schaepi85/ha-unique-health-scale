@@ -2,15 +2,24 @@
   "domain": "unique_health_scale",
   "name": "Unique Health Scale (Lefu)",
   "bluetooth": [
-    { "manufacturer_id": 6672 }
+    {
+      "manufacturer_id": 6672
+    },
+    {
+      "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb"
+    }
   ],
-  "codeowners": ["@schaepi85"],
+  "codeowners": [
+    "@schaepi85"
+  ],
   "config_flow": true,
-  "dependencies": ["bluetooth_adapters"],
+  "dependencies": [
+    "bluetooth_adapters"
+  ],
   "documentation": "https://github.com/schaepi85/ha-unique-health-scale",
   "integration_type": "device",
   "iot_class": "local_push",
   "issue_tracker": "https://github.com/schaepi85/ha-unique-health-scale/issues",
   "requirements": [],
-  "version": "0.1.0"
+  "version": "0.1.1"
 }
