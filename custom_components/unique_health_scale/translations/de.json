@@ -298,10 +298,12 @@
         "description": "Eine Wiegung wird automatisch zugeordnet, wenn das Gewicht höchstens um die Toleranz vom letzten Gewicht einer Person abweicht und keine zweite Person ähnlich nah liegt. Sonst fragt Home Assistant nach.",
         "data": {
           "tolerance": "Toleranz",
-          "notify": "Rückfrage aufs Handy"
+          "notify": "Rückfrage aufs Handy",
+          "untested_body": "Körperwerte für ungetestete Waage berechnen"
         },
         "data_description": {
-          "notify": "Geräte der Home-Assistant-App, die bei einer unklaren Wiegung eine Mitteilung mit den passenden Personen als Knöpfe bekommen. Ohne Auswahl erscheint die Rückfrage nur als Mitteilung in Home Assistant."
+          "notify": "Geräte der Home-Assistant-App, die bei einer unklaren Wiegung eine Mitteilung mit den passenden Personen als Knöpfe bekommen. Ohne Auswahl erscheint die Rückfrage nur als Mitteilung in Home Assistant.",
+          "untested_body": "Nur für Waagen, die nicht in der Liste der getesteten Modelle stehen. Die Berechnung ist für die getesteten Modelle kalibriert; bei anderen Waagen können die Werte falsch sein. Bitte mit der App vergleichen."
         }
       }
     },
@@ -317,6 +319,32 @@
         "male": "Männlich",
         "female": "Weiblich"
       }
+    }
+  },
+  "issues": {
+    "untested_model": {
+      "title": "Waage „{model}“ ist nicht getestet",
+      "description": "Diese Integration ist nur mit den Modellen getestet, die in der README stehen. Für „{model}“ zeigt sie Gewicht, Herzfrequenz und Impedanzen an, sofern die Waage dasselbe Protokoll spricht. Körperwerte (Körperfett, Muskelmasse …) werden nicht berechnet, weil andere Modelle andere Kalibrierfaktoren verwenden können und die Ergebnisse dann falsch wären.\n\nZum Ausprobieren: Einstellungen → Geräte & Dienste → Unique Health Scale → Konfigurieren → Zuordnung und Rückfrage → „Körperwerte für ungetestete Waage berechnen“. Danach die Werte mit der App vergleichen.\n\nBitte melde, ob es funktioniert, damit das Modell in die Liste kommt: {url}"
+    },
+    "unsupported_four_electrode": {
+      "title": "Waage „{model}“ nutzt ein anderes Protokoll",
+      "description": "„{model}“ sendet eine Impedanz im Gewichtspaket. Das ist das Format einer anderen Lefu-Gerätefamilie (meist Waagen mit 4 Elektroden), die diese Integration nicht unterstützt. Das Gewicht wird weiter angezeigt, Körperwerte gibt es nicht.\n\nBitte lege einen Testbericht mit der Diagnose-Datei an: {url}"
+    },
+    "unsupported_unknown_advertising": {
+      "title": "Waage „{model}“ nutzt ein unbekanntes Protokoll",
+      "description": "Die Bluetooth-Daten von „{model}“ enthalten nicht die Pakete, die diese Integration versteht. Es können deshalb keine Werte angezeigt werden; geraten wird nichts.\n\nBitte lege einen Testbericht mit der Diagnose-Datei an: {url}"
+    },
+    "unsupported_unknown_frames": {
+      "title": "Waage „{model}“ nutzt ein unbekanntes Protokoll",
+      "description": "„{model}“ hat während einer Messung Daten gesendet, die diese Integration nicht versteht, und es kamen keine Impedanzen an. Körperwerte gibt es deshalb nicht; das Gewicht wird weiter angezeigt.\n\nBitte lege einen Testbericht mit der Diagnose-Datei an: {url}"
+    },
+    "unsupported_no_notify": {
+      "title": "Waage „{model}“ nutzt ein unbekanntes Protokoll",
+      "description": "„{model}“ bietet den Bluetooth-Kanal (FFF4) nicht an, über den diese Integration die Körperanalyse mitliest. Körperwerte gibt es deshalb nicht.\n\nBitte lege einen Testbericht mit der Diagnose-Datei an: {url}"
+    },
+    "no_impedance": {
+      "title": "Keine Körperanalyse von „{model}“",
+      "description": "{count} Messungen hintereinander kamen ohne Impedanzen an, deshalb konnten keine Körperwerte berechnet werden. Mögliche Ursachen:\n\n- mit Socken oder Schuhen gewogen, oder der Griff wurde nicht bis zum Ende mit beiden Händen gehalten\n- die Unique-Health-App war gleichzeitig mit der Waage verbunden\n- Bluetooth-Adapter oder -Proxy ist zu weit weg oder kann keine aktiven Verbindungen\n- die Waage hat nur 4 Elektroden oder nutzt ein anderes Protokoll\n\nDieser Hinweis verschwindet mit der nächsten vollständigen Messung."
     }
   }
 }

@@ -32,6 +32,7 @@ from .const import (
     CONF_REFERENCE_WEIGHT,
     CONF_SEX,
     CONF_TOLERANCE,
+    CONF_UNTESTED_BODY,
     DEFAULT_TOLERANCE_KG,
     DOMAIN,
     UNASSIGNED,
@@ -311,13 +312,17 @@ class PersonsOptionsFlow(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Toleranz der automatischen Zuordnung und Rueckfrage aufs Handy."""
+        untested = not getattr(
+            getattr(self.config_entry, "runtime_data", None), "tested", True
+        )
         if user_input is not None:
-            return self._save(
-                **{
-                    CONF_TOLERANCE: float(user_input[CONF_TOLERANCE]),
-                    CONF_NOTIFY: list(user_input.get(CONF_NOTIFY, [])),
-                }
-            )
+            changes: dict[str, Any] = {
+                CONF_TOLERANCE: float(user_input[CONF_TOLERANCE]),
+                CONF_NOTIFY: list(user_input.get(CONF_NOTIFY, [])),
+            }
+            if untested:
+                changes[CONF_UNTESTED_BODY] = bool(user_input.get(CONF_UNTESTED_BODY, False))
+            return self._save(**changes)
         services = sorted(
             service
             for service in self.hass.services.async_services().get("notify", {})
@@ -336,6 +341,9 @@ class PersonsOptionsFlow(OptionsFlow):
                 ),
             }
         )
+        if untested:
+            # Nur bei ungetesteten Waagen: Koerperwerte auf eigene Verantwortung
+            schema = schema.extend({vol.Optional(CONF_UNTESTED_BODY): selector.BooleanSelector()})
         return self.async_show_form(
             step_id="settings",
             data_schema=self.add_suggested_values_to_schema(
@@ -343,6 +351,7 @@ class PersonsOptionsFlow(OptionsFlow):
                 {
                     CONF_TOLERANCE: self.config_entry.options.get(CONF_TOLERANCE, DEFAULT_TOLERANCE_KG),
                     CONF_NOTIFY: self.config_entry.options.get(CONF_NOTIFY, []),
+                    CONF_UNTESTED_BODY: self.config_entry.options.get(CONF_UNTESTED_BODY, False),
                 },
             ),
         )

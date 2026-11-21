@@ -20,6 +20,7 @@ from .const import (
     CONF_SEX,
     DOMAIN,
 )
+from . import compat
 from .device import ScaleDevice
 from .parser import IMPEDANCE_KEYS
 from .profile import Profile, person_identifier
@@ -165,5 +166,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ScaleConfigEntry) -> bo
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: ScaleConfigEntry) -> None:
-    """Gemerkte letzte Wiegung verwerfen."""
+    """Gemerkte letzte Wiegung und Hinweise unter Reparaturen verwerfen."""
     hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
+    compat.async_clear_all(hass, entry.entry_id)

@@ -81,6 +81,9 @@ class CfFrame:
     unit: int
     heart_rate: int | None
     heart_rate_measuring: bool
+    # Bytes 5-7: bei der Familie "Ice" immer 0. Andere Lefu-Familien (meist
+    # 4-Elektroden-Waagen) senden hier eine Impedanz; das erkennt compat.py.
+    extra: int = 0
 
 
 def _xor(data: bytes) -> int:
@@ -100,6 +103,7 @@ def parse_cf_frame(data: bytes) -> CfFrame | None:
         unit=data[8],
         heart_rate=data[1] if data[2] == 0xC0 else None,
         heart_rate_measuring=data[2] == 0x80,
+        extra=int.from_bytes(data[5:8], "little"),
     )
 
 

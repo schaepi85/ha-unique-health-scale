@@ -298,10 +298,12 @@
         "description": "A weighing is assigned automatically if the weight differs from a person's last weight by no more than the tolerance and no second person is similarly close. Otherwise Home Assistant asks.",
         "data": {
           "tolerance": "Tolerance",
-          "notify": "Ask on the phone"
+          "notify": "Ask on the phone",
+          "untested_body": "Calculate body values for an untested scale"
         },
         "data_description": {
-          "notify": "Devices of the Home Assistant app that get a notification with the matching people as buttons when a weighing is unclear. Without a selection the question only appears as a notification in Home Assistant."
+          "notify": "Devices of the Home Assistant app that get a notification with the matching people as buttons when a weighing is unclear. Without a selection the question only appears as a notification in Home Assistant.",
+          "untested_body": "Only for scales that are not on the tested list. The calculation is calibrated for the tested models; on other scales the values may be wrong. Please compare them with the app."
         }
       }
     },
@@ -317,6 +319,32 @@
         "male": "Male",
         "female": "Female"
       }
+    }
+  },
+  "issues": {
+    "untested_model": {
+      "title": "Scale “{model}” has not been tested",
+      "description": "This integration has only been tested with the models listed in the README. For “{model}” it shows weight, heart rate and impedances as long as the scale speaks the same protocol. Body values (body fat, muscle mass …) are not calculated, because other models may use different calibration factors and the results could be wrong.\n\nIf you want to try it anyway: Settings → Devices & services → Unique Health Scale → Configure → Assignment and question → “Calculate body values for an untested scale”. Then compare the values with the app.\n\nPlease report whether it works, so the model can be added to the list: {url}"
+    },
+    "unsupported_four_electrode": {
+      "title": "Scale “{model}” uses a different protocol",
+      "description": "“{model}” sends an impedance inside its weight packet. That is the format of another Lefu device family (usually scales with 4 electrodes), which this integration does not support. The weight is still shown; body values are not available.\n\nPlease create a test report with the diagnostics file attached: {url}"
+    },
+    "unsupported_unknown_advertising": {
+      "title": "Scale “{model}” uses an unknown protocol",
+      "description": "The Bluetooth data of “{model}” does not contain the packets this integration understands, so no values can be shown. Nothing is guessed.\n\nPlease create a test report with the diagnostics file attached: {url}"
+    },
+    "unsupported_unknown_frames": {
+      "title": "Scale “{model}” uses an unknown protocol",
+      "description": "During a measurement “{model}” sent data this integration does not understand, and no impedances arrived. Body values are therefore not available; the weight is still shown.\n\nPlease create a test report with the diagnostics file attached: {url}"
+    },
+    "unsupported_no_notify": {
+      "title": "Scale “{model}” uses an unknown protocol",
+      "description": "“{model}” does not offer the Bluetooth channel (FFF4) this integration reads the body analysis from. Body values are therefore not available.\n\nPlease create a test report with the diagnostics file attached: {url}"
+    },
+    "no_impedance": {
+      "title": "No body analysis from “{model}”",
+      "description": "{count} measurements in a row arrived without impedances, so no body values could be calculated. Possible causes:\n\n- measured with socks or shoes, or the handle was not held with both hands until the end\n- the Unique Health app was connected to the scale at the same time\n- the Bluetooth adapter or proxy is too far away or does not support active connections\n- the scale has only 4 electrodes or uses another protocol\n\nThis notice disappears with the next complete measurement."
     }
   }
 }

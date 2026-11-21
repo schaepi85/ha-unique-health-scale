@@ -1,0 +1,73 @@
+name: Testbericht für eine Waage
+description: Melden, ob eine Waage mit der Integration funktioniert (auch wenn alles klappt)
+title: "Testbericht: <Modell>"
+labels: ["kompatibilität"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Danke! Getestet ist bisher nur die „smart scale P1“. Jeder Bericht hilft, die Liste in der README zu erweitern.
+        Bitte keine Fotos von Personen und keine Daten anderer Leute anhängen. Die Diagnose-Datei enthält deine Messwerte (Gewicht, Impedanzen, Herzfrequenz); Bluetooth-Adresse, Namen und Geburtsdaten sind darin unkenntlich gemacht.
+  - type: input
+    id: model
+    attributes:
+      label: Modell und Marke
+      description: Wie die Waage im Handel heißt, am besten mit Link zum Angebot
+      placeholder: "z. B. Marke XY, 8-Elektroden-Waage mit Griff"
+    validations:
+      required: true
+  - type: input
+    id: bluetooth_name
+    attributes:
+      label: Bluetooth-Name
+      description: So heißt die Waage in Home Assistant bzw. in den Bluetooth-Einstellungen des Handys
+      placeholder: "z. B. smart scale P1"
+    validations:
+      required: true
+  - type: dropdown
+    id: electrodes
+    attributes:
+      label: Elektroden
+      options:
+        - 8 (mit Handgriff)
+        - 4 (nur Fußfläche)
+        - weiß ich nicht
+    validations:
+      required: true
+  - type: checkboxes
+    id: works
+    attributes:
+      label: Was funktioniert?
+      options:
+        - label: Waage wird von Home Assistant gefunden
+        - label: Gewicht stimmt mit der Anzeige der Waage überein
+        - label: Herzfrequenz kommt an
+        - label: Impedanzen kommen an (Sensor „Impedanzen“ zeigt 10)
+        - label: Körperwerte stimmen ungefähr mit der Unique-Health-App überein
+  - type: textarea
+    id: comparison
+    attributes:
+      label: Vergleich mit der App
+      description: Ein paar Werte aus Home Assistant und aus der App nebeneinander (z. B. Körperfett, Muskelmasse, Wasser, Viszeralfett). Gern gerundet.
+      placeholder: "Körperfett: HA 21,4 % / App 21,6 %"
+  - type: input
+    id: bluetooth
+    attributes:
+      label: Bluetooth-Anbindung
+      placeholder: "z. B. eingebauter Adapter des Raspberry Pi 4 / ESPHome-Proxy (ESP32)"
+  - type: input
+    id: versions
+    attributes:
+      label: Versionen
+      placeholder: "Home Assistant 2026.x, Integration 0.6.0"
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnose-Datei
+      description: "Nach einer Messung: Einstellungen → Geräte & Dienste → Unique Health Scale → ⋮ → Diagnose herunterladen. Datei hier hineinziehen."
+  - type: textarea
+    id: notes
+    attributes:
+      label: Hinweise unter „Reparaturen“, Log-Meldungen, Sonstiges
