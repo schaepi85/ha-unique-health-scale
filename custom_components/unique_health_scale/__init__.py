@@ -72,7 +72,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             identifiers={(DOMAIN, person_identifier(address, person_id))},
             name=name,
             manufacturer="Lefu (PAVABA)",
-            via_device=(DOMAIN, address),
         )
         if scale is not None and scale.area_id:
             device_registry.async_update_device(person_device.id, area_id=scale.area_id)
@@ -113,6 +112,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ScaleConfigEntry) -> boo
     entry.runtime_data = device
     _async_remove_stale_devices(hass, entry, device)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    _async_link_person_devices(hass, device)
     entry.async_on_unload(device.async_start())
     entry.async_on_unload(entry.add_update_listener(_async_reload))
     return True
@@ -132,6 +132,26 @@ def _async_remove_stale_devices(
             device_registry.async_update_device(
                 entity_device.id, remove_config_entry_id=entry.entry_id
             )
+
+
+@callback
+def _async_link_person_devices(hass: HomeAssistant, device: ScaleDevice) -> None:
+    """Geraete der Personen unter die Waage haengen.
+
+    Bewusst ueber die Geraete-ID: Die Angabe `via_device` beim Anlegen ist in
+    neueren Home-Assistant-Versionen abgekuendigt und laesst dort z. B. das
+    Umbenennen einer Entitaet scheitern.
+    """
+    device_registry = dr.async_get(hass)
+    scale = device_registry.async_get_device(identifiers={(DOMAIN, device.address)})
+    if scale is None:
+        return
+    for person_id in device.persons:
+        person_device = device_registry.async_get_device(
+            identifiers={(DOMAIN, person_identifier(device.address, person_id))}
+        )
+        if person_device is not None and person_device.via_device_id != scale.id:
+            device_registry.async_update_device(person_device.id, via_device_id=scale.id)
 
 
 async def _async_reload(hass: HomeAssistant, entry: ScaleConfigEntry) -> None:

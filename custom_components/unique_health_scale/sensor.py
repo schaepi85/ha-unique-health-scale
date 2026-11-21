@@ -90,7 +90,6 @@ class _PersonEntity(_ScaleEntity):
             name=person.person.name,
             manufacturer="Lefu (PAVABA)",
             model=device.name,
-            via_device=(DOMAIN, device.address),
         )
         self._revert_seen = person.revert_serial
         self._undo: tuple[int, Any, dict[str, Any] | None] | None = None
