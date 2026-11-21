@@ -1,0 +1,39 @@
+name: Fehler melden
+description: Etwas funktioniert nicht wie beschrieben
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: Was passiert, und was hättest du erwartet?
+    validations:
+      required: true
+  - type: input
+    id: model
+    attributes:
+      label: Waage (Modell und Bluetooth-Name)
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Versionen
+      placeholder: "Home Assistant 2026.x, Integration 0.6.0"
+    validations:
+      required: true
+  - type: input
+    id: bluetooth
+    attributes:
+      label: Bluetooth-Anbindung
+      placeholder: "z. B. eingebauter Adapter / ESPHome-Proxy"
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnose-Datei
+      description: "Einstellungen → Geräte & Dienste → Unique Health Scale → ⋮ → Diagnose herunterladen. Enthält deine Messwerte; Bluetooth-Adresse, Namen und Geburtsdaten sind unkenntlich gemacht."
+  - type: textarea
+    id: log
+    attributes:
+      label: Log-Auszug
+      description: "Am besten mit Debug-Logging (siehe README, Abschnitt Fehlersuche)"
+      render: text

@@ -33,6 +33,8 @@ CONF_NAME = "name"
 CONF_REFERENCE_WEIGHT = "reference_weight"
 CONF_TOLERANCE = "tolerance"
 CONF_NOTIFY = "notify"
+# Koerperwerte auch fuer ungetestete Modelle berechnen
+CONF_UNTESTED_BODY = "untested_body"
 
 # Zuordnung einer Wiegung: so weit darf das Gewicht vom letzten Gewicht der
 # Person abweichen, und so viel naeher muss sie als die naechste Person liegen.

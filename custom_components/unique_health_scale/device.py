@@ -27,9 +27,11 @@ from homeassistant.util import dt as dt_util
 
 from .bodycomp import SEGMENTS, BodyComposition, BodyCompositionError, compute
 from .assign import match_person
+from . import compat
 from .const import (
     CONF_NOTIFY,
     CONF_TOLERANCE,
+    CONF_UNTESTED_BODY,
     CONNECT_COOLDOWN,
     DEFAULT_TOLERANCE_KG,
     DOMAIN,
@@ -164,6 +166,17 @@ class ScaleDevice:
                 {key: data.reference_weight_kg for key, data in self.persons.items()},
                 self.tolerance_kg,
             )
+        # Modell = Bluetooth-Name; bis zum ersten Advertising der Titel des Eintrags
+        last = bluetooth.async_last_service_info(hass, address, connectable=False)
+        self.model: str = (last.name if last and last.name else None) or entry.title
+        self.body_for_untested = bool(entry.options.get(CONF_UNTESTED_BODY, False))
+        self.protocol_problem: str | None = None
+        self._cf_seen = False
+        self._unknown_adverts = 0
+        self._unknown_frames = 0
+        self._session_locked = False
+        self._session_impedances = False
+        self.sessions_without_impedance = 0
         self._measuring_seen = False
         self._tracked_weight: float | None = None
         self._stale_ohm: dict[str, float] | None = None
@@ -178,8 +191,44 @@ class ScaleDevice:
             connections={(CONNECTION_BLUETOOTH, self.address)},
             name=self.name,
             manufacturer="Lefu (PAVABA)",
-            model="8-Elektroden-Koerperfettwaage",
+            model=compat.TESTED_MODELS.get(self.model.strip().casefold(), self.model),
         )
+
+    # ------------------------------------------------------------ Kompatibilitaet
+
+    @property
+    def tested(self) -> bool:
+        """True, wenn das Modell dieser Waage getestet ist."""
+        return compat.is_tested(self.model)
+
+    @callback
+    def _async_check_model(self) -> None:
+        """Ungetestetes Modell unter Reparaturen melden."""
+        if self.tested:
+            compat.async_clear_untested(self.hass, self.entry.entry_id)
+            return
+        _LOGGER.warning(
+            "Waage %s (%s) ist mit dieser Integration nicht getestet. Gewicht und"
+            " Impedanzen werden angezeigt, Koerperwerte nur, wenn das in den"
+            " Einstellungen eingeschaltet ist%s. Testbericht willkommen: %s",
+            self.model,
+            self.address,
+            " (ist eingeschaltet)" if self.body_for_untested else "",
+            compat.REPORT_URL,
+        )
+        compat.async_report_untested(self.hass, self.entry.entry_id, self.model)
+
+    @callback
+    def _async_protocol_problem(self, reason: str) -> None:
+        """Erkennbar falsches Protokoll: einmal melden."""
+        if self.protocol_problem is not None:
+            return
+        if self.tested:
+            # Ein getestetes Modell wird wegen eines einzelnen Ausreissers nicht abgestempelt
+            _LOGGER.debug("Unerwartete Daten von %s (%s)", self.model, reason)
+            return
+        self.protocol_problem = reason
+        compat.async_report_unsupported(self.hass, self.entry.entry_id, self.model, reason)
 
     # ------------------------------------------------------------------ Sensoren
 
@@ -279,6 +328,12 @@ class ScaleDevice:
         if weighing.heart_rate:
             data.heart_rate = weighing.heart_rate
         if weighing.ohm is None:
+            return
+        if not self.tested and not self.body_for_untested:
+            data.body_state = (
+                f"nicht berechnet: Modell „{self.model}“ ist ungetestet"
+                " (in den Einstellungen einschaltbar)"
+            )
             return
         measured = (weighing.weight_kg, *weighing.ohm.values())
         if measured == data.body_input:
@@ -419,6 +474,7 @@ class ScaleDevice:
             ),
             self.hass.bus.async_listen(EVENT_MOBILE_ACTION, self._async_on_mobile_action),
         ]
+        self._async_check_model()
 
         @callback
         def _stop() -> None:
@@ -434,6 +490,9 @@ class ScaleDevice:
         change: bluetooth.BluetoothChange,
     ) -> None:
         self.last_info = info
+        if info.name and info.name != self.model:
+            self.model = info.name
+            self._async_check_model()
         parts = [f"0x{cid:04X}={data.hex()}" for cid, data in info.manufacturer_data.items()]
         parts += [f"{uuid[4:8]}={data.hex()}" for uuid, data in info.service_data.items()]
         if not parts:
@@ -449,6 +508,17 @@ class ScaleDevice:
         for data in info.manufacturer_data.values():
             if frame := find_cf_frame(data):
                 break
+        if frame is not None:
+            self._cf_seen = True
+            if frame.extra:
+                # Impedanz im Gewichts-Frame: andere Geraetefamilie (4 Elektroden)
+                self._async_protocol_problem(compat.REASON_FOUR_ELECTRODE)
+        elif not self._cf_seen and any(
+            len(data) > 6 and any(data[6:]) for data in info.manufacturer_data.values()
+        ):
+            self._unknown_adverts += 1
+            if self._unknown_adverts >= compat.UNKNOWN_ADVERTISING_LIMIT:
+                self._async_protocol_problem(compat.REASON_UNKNOWN_ADVERTISING)
         if frame is not None:
             if not self.connected:
                 self.measurement.feed_cf(frame)
@@ -533,7 +603,11 @@ class ScaleDevice:
                     subscribed.append(uuid[4:8])
             if not subscribed:
                 self._set_session_state("verbunden, aber keine Notify-Characteristic gefunden")
+                self._async_protocol_problem(compat.REASON_NO_NOTIFY)
                 return
+            self._unknown_frames = 0
+            self._session_locked = self.measurement.status in LOCKED_STATES
+            self._session_impedances = False
             self._set_session_state(f"verbunden, lausche auf {','.join(subscribed)}")
             try:
                 async with asyncio.timeout(SESSION_TIMEOUT):
@@ -549,6 +623,7 @@ class ScaleDevice:
                 self._set_session_state("Sitzung nach Zeitlimit beendet")
             else:
                 self._set_session_state("Waage hat getrennt")
+            self._async_session_finished()
         except BleakError as err:
             self._set_session_state(f"Fehler: {err}")
         finally:
@@ -559,6 +634,28 @@ class ScaleDevice:
                 _LOGGER.debug("Trennen fehlgeschlagen: %s", err)
             self._last_attempt = time.monotonic()
 
+    @callback
+    def _async_session_finished(self) -> None:
+        """Nach einer Sitzung pruefen, ob die Koerperanalyse angekommen ist."""
+        if self._session_impedances:
+            self.sessions_without_impedance = 0
+            compat.async_clear_no_impedance(self.hass, self.entry.entry_id)
+            return
+        if not self._session_locked:
+            # Niemand hat sich gewogen (oder die Waage war schon fertig)
+            return
+        if self._unknown_frames and not self.tested:
+            self._async_protocol_problem(compat.REASON_UNKNOWN_FRAMES)
+            return
+        self.sessions_without_impedance += 1
+        _LOGGER.info(
+            "Messung auf %s ohne Impedanzen (%d. in Folge)",
+            self.model,
+            self.sessions_without_impedance,
+        )
+        if self.sessions_without_impedance >= compat.NO_IMPEDANCE_LIMIT:
+            compat.async_report_no_impedance(self.hass, self.entry.entry_id, self.model)
+
     def _on_notification(
         self, source: str, _char: BleakGATTCharacteristic, data: bytearray
     ) -> None:
@@ -568,6 +665,12 @@ class ScaleDevice:
     def _async_handle_frame(self, source: str, data: bytes) -> None:
         self._record(source, data.hex())
         understood = self.measurement.feed(data)
+        if not understood:
+            self._unknown_frames += 1
+        if self.measurement.status in LOCKED_STATES:
+            self._session_locked = True
+        if self.measurement.impedances_ohm is not None:
+            self._session_impedances = True
         _LOGGER.debug(
             "%s von %s: %s%s", source, self.address, data.hex(), "" if understood else " (unbekannt)"
         )
